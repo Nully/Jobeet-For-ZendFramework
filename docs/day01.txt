@@ -1,3 +1,178 @@
 1日目：プロジェクトを始める
 =====
 
+
+はじめに
+-----
+このチュートリアルでは、Advent Calendarの形式を借りて24日間にわたって Zend Framework を使ったウェブアプリケーションの開発方法について説明します。
+
+各章は約1時間ほどで終わる程度であり、実際のWebサイトを最初から最後までコーディングすることで Zend Framework を学習します。
+
+1日1時間24日合計で1日になります。これは Zend Framework を学ぶために必要な時間であると私たちは考えています。毎日、新しい機能がアプリケーションに追加され、ZendFramework のWeb開発ベストプラクティスと同時に新しい機能を紹介するためにこの開発プロセスを利用します。
+
+24日間で作成するアプリケーションの名前は *Jobeet* です。これは PHP のフレームワークである symfony のチュートリアルと同じです。このチュートリアルでは同じアプリケーションを Zend Framework を使用して作成していきます。
+
+
+今日はなにを？
+-----------
+
+今日は PHP コードは書きません。
+しかし1行も書かないにしても新規プロジェクトをブートストラップすることで Zend Framework のようなフレームワークを使うことの利点を理解しはじめるでしょう。
+
+この章の目標は開発環境のセットアップとWebブラウザでアプリケーションのページを表示させることです。
+
+
+前提条件
+-------
+
+Zend Framework は PHP のフレームワークなので当然 PHP がインストールされた環境が必要です。
+Zend Framework の開発・実行には PHP5 以上が必要です。
+
+また、このチュートリアルではデータベースも使用します。
+SQLite もしくは MySQL が使える環境であることを確認してください。
+
+これらに加え Apache のモジュールである `mod_rewirte` が有効であることを前提に進めていきます。
+
+もし `mod_rewrite` モジュールが有効でないならば、極力有効化することをオススメします。
+
+
+Zend Framework のインストール
+---------------
+
+次に Zend Framework をインストールしましょう。
+
+### ダウンロードとインストール
+
+まず、今回のウェブアプリケーション名と同じディレクトリをApacheのドキュメント公開ポイントに「jobeet」という名前で作成します。
+
+次に Zend Framework をダウンロードして展開します。
+
+随筆時点での Zend Framework のバージョンは「1.10.8」です。
+
+Zend Framework はフルパッケージと最小構成パッケージの２つが用意されていますが、今回は最小構成パッケージである、「Zend Framework 1.10.8 Minimal」をダウンロードします。
+
+    $ wget http://framework.zend.com/releases/ZendFramework-1.10.8/ZendFramework-1.10.8-minimal.tar.gz
+    $ tar -zxvf Ark-0.12.tar.gz
+
+ダウンロードが完了したら Zend Framework をインストールしていきます。
+
+展開した「ZendFramework-1.10.8-minimal」ディレクトリ直下にある「library」と「bin」ディレクトリを「jobeet」ディレクトリ直下に複製します。
+
+    $ cp -r ZendFramework-1.10.8-minimal/library/ .
+    $ cp -r ZendFramework-1.10.8-minimal/bin/ .
+
+２つのディレクトリの複製が完了したら、「bin」ディレクトリへパスを通しておきます。
+この作業は後の作業を少しでも開発しやすくするためのものなので、必ずしも必須というわけではありません。
+
+ここまで完了したら Zend Frameworkのコマンドラインスクリプトが動くか確認します。
+
+    $ zf show version
+      Zend Framework Version: 1.10.8
+
+このコマンドは、現在インストールされている Zend Framework のバージョン番号が表示されます。
+
+バージョン番号が正常に表示されれば、正常にインストールされています。
+
+バージョン番号が表示されない場合は、表示されたエラーメッセージを元に設定を行うかして、環境を整えます。（もっと良い言い回しが...＞＜）
+
+
+アプリケーションの作成
+------------------
+
+それではアプリケーションを作成してみましょう。Zend Framework zf.sh（Widnwosユーザーの場合はzf.bat）というコマンドを利用して作成します。
+
+    $ zf create project Jobeet
+
+と実行すると
+
+    $ zf create project Jobeet
+    Creating project at /path/to/Jobeet
+    Note: This command created a web project, for more information setting up your VHOST, please see docs/README
+
+のように `Jobeet` ディレクトリが作成され、その中にアプリケーションのスケルトンが作成されます。
+
+
+アプリケーションディレクトリの構成
+-----------------------------
+
+出来たスケルトンの各ディレクトリの役割は以下のようになります。
+
+ * application - アプリケーションコードを格納するディレクトリ
+ * public - ドキュメントルート
+ * library - Zend Framework以外に利用するライブラリ格納場所
+ * tests - アプリケーションのテストコードを置くディレクトリ
+
+ファイルの役割は
+
+ application/
+   * Bootstrap.php - アプリケーションの起動コードを記述する
+   * configs/application.ini - プリケーション設定ファイル
+   * controllers/ErrorControlelr.php - アプリケーションでエラーが発生した場合に呼び出されるエラーコントローラ
+   * controllers/IndexController.php - アプリケーションインデックスコントローラ
+   * views/scripts/error/error.phtml - ErrorControlelrクラスのerrorAction用テンプレート
+   * views/scripts/index/index.phtml - IndexControlelrクラスのindexAction用テンプレート
+ docs/
+   * README.txt - 読んでください
+ public/
+   * index.php - アプリケーション実行ファイル
+ tests/
+   * application/bootstrap.php - テストコード起動ファイル
+   * library/bootstrap.php - テストコード起動ファイル
+   * phpunit.xml - PHPUnitのテスト環境の設定ファイル（？）
+
+
+Webサーバーのコンフィギュレーション
+---------------------------
+
+Webサーバーのコンフィギュレーション：好ましくないやり方
+
+プロジェクトを Web サーバーの Web 公開ルートディレクトリのどこかで作成したのであれば。すでに Web ブラウザでプロジェクトにアクセスできます。
+
+もちろん設定ファイルを編集しないので、迅速なセットアップができますが、applications/configs/applications.ini にブラウザから直接アクセスできるので手抜きの悪い結果を見ることになります。Web サイトが Zend Framework で開発されたことをユーザーが知っていたら、たくさんのデリケートなファイルにアクセスが可能となってしまします。
+
+**運用サーバーでこのセットアップ方法は絶対に実行してはなりません。 **次の節を読んで Web サーバーの適切な設定方法を学んでください。
+
+Web サーバーのセットアップ：セキュアな方法
+
+Web 開発のよい習慣はスタイルシート、JavaScript、もしくは画像のような Web ブラウザがアクセスする必要のあるファイルだけを Web 公開ルートディレクトリの下に設置することです。デフォルトでは、Zend Framework プロジェクトの public サブディレクトリにこれらのファイルを保存することをおすすめします。
+
+フロントコントローラは Web 公開のルートディレクトリの下に必要な唯一の PHP ファイルです。ほかのすべての PHP ファイルはブラウザから隠すことが可能で、セキュリティに関してよいアイデアです。
+
+Web サーバーのコンフィギュレーション
+
+世界中から新しいプロジェクトにアクセスできるように Apache のコンフィギュレーションを変更しましょう。
+
+httpd.conf 設定ファイルを見つけて開き次のコンフィギュレーションを最後の行を追加します:
+
+
+# Be sure to only have this line once in your configuration
+NameVirtualHost 127.0.0.1:8080
+
+# This is the configuration for your project
+Listen 127.0.0.1:8080
+
+<VirtualHost 127.0.0.1:8080>
+  # Servername jobeet.localhost # ドメイン名で管理していく場合はコメントアウトを外します
+  DocumentRoot "/home/zfprojects/Jobeet/public"
+  DirectoryIndex index.php
+  <Directory "/home/zfprojects/Jobeet/public">
+    AllowOverride All
+    Allow from All
+  </Directory>
+</VirtualHost>
+
+
+新しい設定をテストする
+------------------
+
+Apache を再起動し、ブラウザを開き http://localhost:8080/ もしくは http://jobeet.localhost/を入力することで新しいアプリケーションにアクセスできるか確認します。どちらの URL になるのかは以前の節で選んだ設定によります。
+
+
+
+それではまた明日！
+---------------
+
+はい、今日はここまでです。まだ PHP コードを一行も書いていませんが、Zend Framework の開発環境をセットアップし、アプリケーションのスケルトンを作成することができました。
+
+明日は、アプリケーションが何を行うのかを明らかにしチュートリアルの間に実装する必要のある要件を話します。
+
