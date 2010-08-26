@@ -47,24 +47,47 @@ Zend Framework のインストール
 
 次に Zend Framework をダウンロードして展開します。
 
-随筆時点での Zend Framework のバージョンは「1.10.8」です。
+随筆時点での Zend Framework の最新バージョンは「1.10.8」です。
 
-Zend Framework はフルパッケージと最小構成パッケージの２つが用意されていますが、今回は最小構成パッケージである、「Zend Framework 1.10.8 Minimal」をダウンロードします。
+Zend Framework はフルパッケージと最小構成パッケージの２つが用意されていますが、アーカイブをダウンロードして展開する方法でもよいのですが、今回はSubversionを利用して、最新バージョンをのフルパッケージインストールします。
 
-    $ wget http://framework.zend.com/releases/ZendFramework-1.10.8/ZendFramework-1.10.8-minimal.tar.gz
-    $ tar -zxvf Ark-0.12.tar.gz
+以下のコマンドを入力してください。
 
-ダウンロードが完了したら Zend Framework をインストールしていきます。
+    $ svn co http://framework.zend.com/svn/framework/standard/branches/release-1.10/ ZendFramework
 
-展開した「ZendFramework-1.10.8-minimal」ディレクトリ直下にある「library」と「bin」ディレクトリを「jobeet」ディレクトリ直下に複製します。
+アーカイブをダウンロードする方はこちらからダウンロードして、展開してください。
 
-    $ cp -r ZendFramework-1.10.8-minimal/library/ .
-    $ cp -r ZendFramework-1.10.8-minimal/bin/ .
+   http://framework.zend.com/download/latest
 
-２つのディレクトリの複製が完了したら、「bin」ディレクトリへパスを通しておきます。
-この作業は後の作業を少しでも開発しやすくするためのものなので、必ずしも必須というわけではありません。
+  ** 開発版をインストールしても構いませんが、 **
 
-ここまで完了したら Zend Frameworkのコマンドラインスクリプトが動くか確認します。
+ダウンロード完了後、パスを追加し、`zf` コマンドを有効化します。
+
+  $ vi ~/.bashrc
+
+を実行し、以下の内容を記述します。
+
+  export PATH=/path/to/ZendFramework/bin:$PATH
+
+  ** /path/to/はインストールした場所によって変わります **
+
+次に、`ZendFramework/bin` にある `zf.sh` を `zf` に名前を変更します。
+
+  $ cd ZendFramework
+  $ mv zf.sh zf
+
+  ** 場合によってシンボリックリンクを作成することも可能です **
+
+名前の変更が完了したらあと少しでインストールが完了します！
+
+名前の変更が完了したら、次に、`php.ini` の `include_path` に `ZendFramework/library/` へのパスを追加します。
+
+  $ vi /path/to/php.ini
+  include_path = "/already/path/to/include/:/path/to/ZendFramework/library"
+
+これで、 Zend Framework のインストールが完了しました。
+
+ここまで完了したら Zend Framework のコマンドラインスクリプトが動くか確認します。
 
     $ zf show version
       Zend Framework Version: 1.10.8
