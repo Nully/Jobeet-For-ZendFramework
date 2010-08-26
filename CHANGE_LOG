@@ -1,0 +1,9 @@
+ChangeLOG
+=====
+- 2010/08/26
+  * CHANGE_LOGの追加
+  * Zend Frameworkのアップデート（1.10.8）
+    (http://framework.zend.com/changelog/1.10.8)
+  * 日毎のドキュメントファイル（のみ）を作成
+
+
