@@ -1,2 +1,129 @@
 3日目：データモデル
 =====
+
+テキストエディタを開いて PHP コードを書きたい方は、今日のチュートリアルで開発を進めることを知ったらしあわせになるでしょう。
+
+Jobeet のデータモデルを定義し、データベースとの情報のやりとりに ORM を使い、アプリケーションの最初のモジュールを作ります。
+
+Zend Framework が多くの作業を私たちの代わりにやってくれるので、PHP コードをあまり書かなくても十分な機能をもつ Web モジュールが手に入ります。
+
+
+リレーションシップモデル
+-------------------
+
+昨日のユーザーストーリーではプロジェクトの主要なオブジェクト:
+
+ * jobs (求人)
+ * affiliates (アフィリエイト)
+ * categories (カテゴリ)
+
+を詳しく説明しました。
+
+下図は対応するエンティティ関係図です:
+[mockup img/ER.png]
+
+
+ストーリーで説明したカラムに加えて、いくつかのテーブルには created_at フィールドが追加されています。
+
+このフィールドには、レコードが生成されたときの現在のシステム時刻が Zend Framework によって自動的にセットされます。updated_at フィールドも同様です。レコードが更新されたときのシステム時刻がセットされます。
+
+
+スキーマ
+-----
+
+求人、アフィリエイト、カテゴリを保存するために、当然リレーショナルデータベースが必要となります。
+
+しかし Zend Framework はオブジェクト指向のフレームワークですから、可能ならいつでもオブジェクトとして操作したいでしょう。たとえば、データベースからレコードを取得する SQL 文を書くのではなく、オブジェクトを使います。
+
+リレーショナルデータベースの情報をオブジェクトモデルとしてマッピングする必要があります。このマッピングには ORM ツールを使いますが、Zend Framework には1つの ORM Zend_Db クラスが搭載されています。
+
+ORM には、関連するクラスを生成するために、テーブルとリレーションシップ (関係) についての定義が必要になります。スキーマの記述には既存のデータベースからスキーマを作る方法があります。
+
+==
+ここびみょー
+
+まず、 Jobeet 用のデータベースを用意します。
+
+用意するデータベース名は「jobeet」とし、phpMyAdmin及び、コマンドラインから新しくデータベースを作成します。
+
+次に、データベースから `Zend_Db_Table` クラスを継承した各テーブルの `DB_Table` クラスを 生成するため、下記SQLをphpMyAdmin及び、コマンドラインから注入します。
+
+CREATE TABLE `affiliate` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `url` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `token` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `is_active` tinyint(4) NOT NULL DEFAULT '0',
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+
+CREATE TABLE `category` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+
+INSERT INTO `category` VALUES(1, 'Design', NOW(), NOW());
+INSERT INTO `category` VALUES(2, 'Programming', NOW(), NOW());
+INSERT INTO `category` VALUES(3, 'Manager', NOW(), NOW());
+INSERT INTO `category` VALUES(4, 'Administrator', NOW(), NOW());
+
+CREATE TABLE `category_affiliate` (
+  `category_id` bigint(20) NOT NULL,
+  `affiliate_id` bigint(20) NOT NULL,
+  KEY `affiliate_id` (`affiliate_id`),
+  KEY `category_id` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE `job` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `category_id` bigint(20) NOT NULL,
+  `type` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `company` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `logo` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `url` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `position` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `location` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `description` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `how_to_apply` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `token` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `is_public` tinyint(4) NOT NULL DEFAULT '1',
+  `is_activated` tinyint(4) NOT NULL DEFAULT '0',
+  `email` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `category_id` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+
+ALTER TABLE `category_affiliate`
+  ADD CONSTRAINT `category_affiliate_ibfk_2` FOREIGN KEY (`affiliate_id`) REFERENCES `affiliate` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `category_affiliate_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `job`
+  ADD CONSTRAINT `job_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `job` (`id`) ON DELETE CASCADE;
+
+次に、 `Db_Table` クラスを生成する準備として、 Zend Framework にデータベースのユーザー名やパスワードを教えてあげる必要があります。
+
+次のコマンドを実行することで、Jobeetアプリケーションで利用するデータベースの情報を設定することが可能です。
+
+    $ zf configure db-adapter adapter=Mysql&username=[uname]&password=[mypass]&dbname=[mydb]
+
+ ** [] 内は環境にあわせて修正してください **
+ ** でサポートされている `adapter` は、多数ありますが、今回は「mysql」を利用します **
+
+
+==
+
+/*
+データベースがまだ存在していないのと、Jobeet をデータベースエンジンに依存しないようにするために、空の config/doctrine/schema.yml ファイルを編集してスキーマファイルを手作業で作りましょう:
+*/
+
