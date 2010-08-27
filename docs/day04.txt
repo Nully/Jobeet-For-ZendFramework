@@ -1,2 +1,16 @@
 4日目：ControllerとView
 =====
+
+次に default モジュールに ErrorController と IndexController を作成し、各アクションを作成します。
+
+    $ zf create controller error 0 default      // default モジュールに ErrorController を作成する
+    $ zf create action error Error 1 default    // 上記で作成した ErrorController に errorAction を追加する
+    $ zf create controller index 1 default      // defualt モジュールに IndexController を作成する
+
+  ** 0 と 1 の箇所は 表示部分を形成する view ファイルを作成するかの指定をします **
+
+    $ zf create controller error 0 admin      // default モジュールに ErrorController を作成する
+    $ zf create action error Error 1 admin    // 上記で作成した ErrorController に errorAction を追加する
+    $ zf create controller index 1 admin      // defualt モジュールに IndexController を作成する
+
+
