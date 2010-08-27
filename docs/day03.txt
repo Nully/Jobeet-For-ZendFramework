@@ -8,6 +8,20 @@ Jobeet のデータモデルを定義し、データベースとの情報のや�
 Zend Framework が多くの作業を私たちの代わりにやってくれるので、PHP コードをあまり書かなくても十分な機能をもつ Web モジュールが手に入ります。
 
 
+Zend Framework のモデルについて
+----------------------------
+
+Zend Framework では `Zend_Db_Table` を利用してデータベースへアクセスします。
+
+`Zend_Db_Table` クラスはテーブルに対する様々な共通のタメのメソッドを提供します。
+
+また `Zend_Db_Table` クラスは `Table Data Gateway`(http://www.martinfowler.com/eaaCatalog/tableDataGateway.html)を採用しています。
+
+*（マッパー作ったほうがいいよね...？＞＜）*
+
+各モジュールからデータベースへアクセスする場合は、モデルクラスからマッパークラスを呼び出し、テーブルゲートウェイへアクセスする仕組みを採用しています。
+
+
 リレーションシップモデル
 -------------------
 
@@ -46,7 +60,7 @@ ORM には、関連するクラスを生成するために、テーブルとリ�
 
 用意するデータベース名は「jobeet」とし、phpMyAdmin及び、コマンドラインから新しくデータベースを作成します。
 
-次に、データベースから `Zend_Db_Table` クラスを継承した各テーブルの `DB_Table` クラスを 生成するため、下記SQLをphpMyAdmin及び、コマンドラインから注入します。
+次にデータベースへ以下のSQL分を全て発行します。
 
 CREATE TABLE `affiliate` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -104,6 +118,9 @@ CREATE TABLE `job` (
   KEY `category_id` (`category_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
 
+INSERT INTO `job` VALUES(1, 2, 'full-time', 'Sensio Labs', 'sensio-labs.gif', 'http://www.sensiolabs.com/', 'Web Developer', 'Paris, France', 'You''ve already developed websites with symfony and you want to work with Open-Source technologies. You have a minimum of 3 years experience in web development with PHP or Java and you wish to participate to development of Web 2.0 sites using the best frameworks available.', 'Send your resume to fabien.potencier [at] sensio.com', 'job_sensio_labs', 1, 1, 'job@example.com', '2010-10-10 00:00:00', NOW(), NOW());
+INSERT INTO `job` VALUES(2, 1, 'part-time', 'Extreme Sensio', 'extreme-sensio.gif', 'http://www.extreme-sensio.com/', 'Web Designer', 'Paris, France', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\r\nUtenim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in.\r\nVoluptate velit esse cillum dolore eu fugiat nulla pariatur.\r\nExcepteur sint occaecat cupidatat non proident, sunt in culpaqui officia deserunt mollit anim id est laborum.', 'Send your resume to fabien.potencier [at] sensio.com', 'job_extreme_sensio', 1, 1, 'job@example.com', '2010-10-10 00:00:00', NOW(), NOW());
+
 ALTER TABLE `category_affiliate`
   ADD CONSTRAINT `category_affiliate_ibfk_2` FOREIGN KEY (`affiliate_id`) REFERENCES `affiliate` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `category_affiliate_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE;
@@ -111,19 +128,54 @@ ALTER TABLE `category_affiliate`
 ALTER TABLE `job`
   ADD CONSTRAINT `job_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `job` (`id`) ON DELETE CASCADE;
 
-次に、 `Db_Table` クラスを生成する準備として、 Zend Framework にデータベースのユーザー名やパスワードを教えてあげる必要があります。
+==
+
+
+### テーブルデータゲートウェイの作成:
+
+次に、 テーブルデータゲートウェイクラスを生成する準備として、 Zend Framework にデータベースのユーザー名やパスワードを教えてあげる必要があります。
 
 次のコマンドを実行することで、Jobeetアプリケーションで利用するデータベースの情報を設定することが可能です。
 
-    $ zf configure db-adapter adapter=Mysql&username=[uname]&password=[mypass]&dbname=[mydb]
+まず、今回 Jobeet で利用するデータベースアダプタは PDO_Mysql となるので、zf コマンドを利用してデータベースアダプタ名を登録します。
+
+    $ zf configure db-adapter "adapter=pdo_mysql"
+    A db configuration for the production section has been written to the application config file.
+
+次に、開発環境で利用するデータベースの接続情報を登録します。
+
+    $ zf configure db-adapter "username=[uname]&password=[mypass]&dbname=[mydb]" development
+    A db configuration for the development section has been written to the application config file.
 
  ** [] 内は環境にあわせて修正してください **
  ** でサポートされている `adapter` は、多数ありますが、今回は「mysql」を利用します **
 
+最後に次のコマンドを実行し、各テーブルのテーブルデータゲートウェイクラスを自動生成します。
 
-==
+    $zf create db-table.from-database
+    Creating a DbTable at /home/Jobeet/application/models/DbTable/Affiliate.php
+    Creating a DbTable at /home/Jobeet/application/models/DbTable/Category.php
+    Creating a DbTable at /home/Jobeet/application/models/DbTable/CategoryAffiliate.php
+    Creating a DbTable at /home/Jobeet/application/models/DbTable/Job.php
+    Updating project profile '/home/Jobeet/.zfproject.xml'
 
-/*
-データベースがまだ存在していないのと、Jobeet をデータベースエンジンに依存しないようにするために、空の config/doctrine/schema.yml ファイルを編集してスキーマファイルを手作業で作りましょう:
-*/
+上記のように表示されれば、テーブルデータゲートウェイクラスの生成が完了しました。
+
+
+### テーブルデータゲートウェイのリファレンスマップを作成:
+リファレンスマップ使わせる！！！
+
+
+
+### モデルマッパーの作成:
+これから、テーブルデータゲートウェイクラスへアクセスするためのマッパークラスを作成します。
+
+コードが長くなりますが、頑張ってください！
+
+
+
+### 最後に default モジュールにコントローラを追加し、確認してみる:
+確認させる！
+
+
 
