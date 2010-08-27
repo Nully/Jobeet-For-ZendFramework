@@ -12,20 +12,6 @@ Zend Framework アプリケーション開発の本格的な詳細内容を学�
 本日は、いくつかの基本モックアップを使って Jobeet の要件について説明していきます。
 
 
-プロジェクト設定ファイルの修正
--------------------------
-
-Zend Framework は、コマンドラインからプロジェクトを作成すると、プロジェクトディレクトリに `.zfproject.xml`という隠しファイルが生成されます。
-
-このファイルを最初に編集しておかないと後々大変なので、今のうちに編集してしまいましょう。
-
-次のコマンドを実行します。
-
-    $ zf change application.class-name-prefix Jobeet
-
-このコマンドを実行しておくことで、これから作成されるファイルは全て、`Jobeet_` から始まるクラス名になります。
-
-
 プロジェクトの売り込み
 ------------------
 
@@ -46,6 +32,47 @@ Zend Framework 開発者はそんなに心配していないだろうし、だ�
 そういう求人サイトはもう存在してるって？利用者として見れば、インターネットには Jobeet のような求人サイトはたくさん見つかるでしょう。しかし上記で述べたような豊富な機能をもつオープンソースの求人ソフトウェアを見つけてみてください。
 
 
+プロジェクトストーリーの前に
+-----------------------
+### Zend Frameworkで１つのプロジェクトで複数のアプリケーションを構築するには:
+Zend Framework ではアプリケーションを細分化し構築するための「モジュラーディレクトリ構造」と呼ばれるモジュール構造体が存在しています。
+
+今回のチュートリアルでは、このモジュラーディレクトリ構造（以下モジュールと略す）を利用し、Symfony で呼ばれる「frontend」と「backend」を実装します。
+
+### モジュールを作成する
+
+まず、frontend となるモジュール「default」モジュールを作成するため、以下のコマンドを実行します。
+
+    $ zf create module default
+    reating the following module and artifacts:
+    /home/Jobeet/application/modules/default/controllers
+    /home/Jobeet/application/modules/default/models
+    /home/Jobeet/application/modules/default/views
+    /home/Jobeet/application/modules/default/views/scripts
+    /home/Jobeet/application/modules/default/views/helpers
+    /home/Jobeet/application/modules/default/views/filters
+    Added a key for the default module to the application.ini file
+    Updating project profile '/home/Jobeet/.zfproject.xml'
+
+実行するとこのような表示がされ、「application」ディレクトリ直下に「modules」というディレクトリが作成されています。
+
+この「modules」ディレクトリ以下にモジュールが作成されていきます。
+
+同じように backend となるモジュール「admin」モジュールを作成します。
+
+    $ zf create module admin
+    Creating the following module and artifacts:
+    /home/Jobeet/application/modules/admin/controllers
+    /home/Jobeet/application/modules/admin/models
+    /home/Jobeet/application/modules/admin/views
+    /home/Jobeet/application/modules/admin/views/scripts
+    /home/Jobeet/application/modules/admin/views/helpers
+    /home/Jobeet/application/modules/admin/views/filters
+    Updating project profile '/home/Jobeet/.zfproject.xml'
+
+ここまで実行すると、frontend と backend となるモジュールの作成が完了しました。
+
+
 プロジェクトのユーザーストーリー
 ---------------------------
 
@@ -59,12 +86,6 @@ Zend Framework 開発者はそんなに心配していないだろうし、だ�
  * ユーザー (user): 仕事を求めて Web サイトに訪問する
  * 投稿者 (poster): 求人情報を投稿するために Web サイトに訪問する
  * アフィリエイト (affiliate): 自分の Web サイトにも求人情報を再投稿する
-
-
-### Zend Frameworkで１つのプロジェクトで複数のアプリケーションを構築するには:
-Zend Framework ではアプリケーションを細分化し構築するための「モジュラーディレクトリ構造」と呼ばれるモジュール構造体が存在しています。
-
-今回のチュートリアルでは、このモジュラーディレクトリ構造（以下モジュールと略す）を利用し、Symfony で呼ばれる「frontend」と「backend」を実装します。
 
 
 ### プロジェクトは2つのアプリケーションから構成されます:
