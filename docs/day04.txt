@@ -27,15 +27,15 @@ Zend Framework はアプリケーションプロジェクトを作成すると�
 実際に Jobeet で利用する job モジュールのコードは一切準備されていませんので、以下のコマンドを実行し、job モジュールを作成します。
 まず、frontend の job モジュールを作成するため、以下のコマンドを実行します。
 
-    $ zf create module default
+    $ zf create module job
     reating the following module and artifacts:
-    /home/Jobeet/application/modules/default/controllers
-    /home/Jobeet/application/modules/default/models
-    /home/Jobeet/application/modules/default/views
-    /home/Jobeet/application/modules/default/views/scripts
-    /home/Jobeet/application/modules/default/views/helpers
-    /home/Jobeet/application/modules/default/views/filters
-    Added a key for the default module to the application.ini file
+    /home/Jobeet/application/modules/job/controllers
+    /home/Jobeet/application/modules/job/models
+    /home/Jobeet/application/modules/job/views
+    /home/Jobeet/application/modules/job/views/scripts
+    /home/Jobeet/application/modules/job/views/helpers
+    /home/Jobeet/application/modules/job/views/filters
+    Added a key for the job module to the application.ini file
     Updating project profile '/home/Jobeet/.zfproject.xml'
 
 実行するとこのような表示がされ、「application」ディレクトリ直下に「modules」というディレクトリが作成されています。
@@ -45,7 +45,7 @@ Zend Framework はアプリケーションプロジェクトを作成すると�
 次に、作成した job モジュールで利用する Controller と View を追加するため、次のコマンドを実行します。
 
     $ zf create controller error 0 job      // default モジュールに ErrorController を作成する
-    $ zf create action error Error 1 job    // 上記で作成した ErrorController に errorAction を追加する
+    $ zf create action error error 1 job    // 上記で作成した ErrorController に errorAction を追加する
     $ zf create controller index 1 job      // defualt モジュールに IndexController を作成する
 
   ** 0 と 1 の箇所は 表示部分を形成する view ファイルを作成するかの指定をします **
