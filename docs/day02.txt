@@ -37,40 +37,9 @@ Zend Framework 開発者はそんなに心配していないだろうし、だ�
 ### Zend Frameworkで１つのプロジェクトで複数のアプリケーションを構築するには:
 Zend Framework ではアプリケーションを細分化し構築するための「モジュラーディレクトリ構造」と呼ばれるモジュール構造体が存在しています。
 
-今回のチュートリアルでは、このモジュラーディレクトリ構造（以下モジュールと略す）を利用し、Symfony で呼ばれる「frontend」と「backend」を実装します。
+今回のチュートリアルでは、このモジュラーディレクトリ構造（以下モジュールと略す）を利用し、各モジュールを作成していきます。
 
-### モジュールを作成する
-
-まず、frontend となるモジュール「default」モジュールを作成するため、以下のコマンドを実行します。
-
-    $ zf create module default
-    reating the following module and artifacts:
-    /home/Jobeet/application/modules/default/controllers
-    /home/Jobeet/application/modules/default/models
-    /home/Jobeet/application/modules/default/views
-    /home/Jobeet/application/modules/default/views/scripts
-    /home/Jobeet/application/modules/default/views/helpers
-    /home/Jobeet/application/modules/default/views/filters
-    Added a key for the default module to the application.ini file
-    Updating project profile '/home/Jobeet/.zfproject.xml'
-
-実行するとこのような表示がされ、「application」ディレクトリ直下に「modules」というディレクトリが作成されています。
-
-この「modules」ディレクトリ以下にモジュールが作成されていきます。
-
-同じように backend となるモジュール「admin」モジュールを作成します。
-
-    $ zf create module admin
-    Creating the following module and artifacts:
-    /home/Jobeet/application/modules/admin/controllers
-    /home/Jobeet/application/modules/admin/models
-    /home/Jobeet/application/modules/admin/views
-    /home/Jobeet/application/modules/admin/views/scripts
-    /home/Jobeet/application/modules/admin/views/helpers
-    /home/Jobeet/application/modules/admin/views/filters
-    Updating project profile '/home/Jobeet/.zfproject.xml'
-
-ここまで実行すると、frontend と backend となるモジュールの作成が完了しました。
+まだ、モジュールは作成しませんが、「モジュラーディレクトリ構造を利用して Jobeet アプリケーションを開発する」ということを覚えておいてください。
 
 
 プロジェクトのユーザーストーリー
