@@ -1,16 +1,136 @@
 4日目：ControllerとView
 =====
 
-次に default モジュールに ErrorController と IndexController を作成し、各アクションを作成します。
+昨日は Zend Framework がどうやってデータベースエンジン間の違いを吸収していたり、オブジェクト指向クラスに変換しているかを見ました。
 
-    $ zf create controller error 0 default      // default モジュールに ErrorController を作成する
-    $ zf create action error Error 1 default    // 上記で作成した ErrorController に errorAction を追加する
-    $ zf create controller index 1 default      // defualt モジュールに IndexController を作成する
+
+Jobeetに必要最低限のコードを付け足す
+-------------------------------
+
+昨日はテーブルデータゲートウェイを使ったデータベースへのアクセスモデルを作りましたが、モジュールが実際に処理を行うControllerや、表示を行うViewを作成していませんので次のコマンドを打ち込みます。
+
+今日は昨日作った job モジュールの基本的なカスタマイズを続けます。job モジュールは Jobeet に必要なコードをすべて有しています:
+
+    * 求人の一覧ページ
+    * 新しく求人を投稿するページ
+    * 投稿した求人を更新するページ
+    * 求人を削除するページ
+
+
+### デフォルトのコントローラを無効化する:
+Zend Framework はアプリケーションプロジェクトを作成すると、デフォルトで default モジュールでアプリケーションが動作するよう設定されています。
+
+この default モジュールを無効化する為、次のようにコメントアウトまたは該当行を削除することで default モジュールを無効化することが出来ます。
+
+
+### モジュールを作成する:
+実際に Jobeet で利用する job モジュールのコードは一切準備されていませんので、以下のコマンドを実行し、job モジュールを作成します。
+まず、frontend の job モジュールを作成するため、以下のコマンドを実行します。
+
+    $ zf create module default
+    reating the following module and artifacts:
+    /home/Jobeet/application/modules/default/controllers
+    /home/Jobeet/application/modules/default/models
+    /home/Jobeet/application/modules/default/views
+    /home/Jobeet/application/modules/default/views/scripts
+    /home/Jobeet/application/modules/default/views/helpers
+    /home/Jobeet/application/modules/default/views/filters
+    Added a key for the default module to the application.ini file
+    Updating project profile '/home/Jobeet/.zfproject.xml'
+
+実行するとこのような表示がされ、「application」ディレクトリ直下に「modules」というディレクトリが作成されています。
+
+この「modules」ディレクトリ以下にモジュールが作成されていきます。
+
+次に、作成した job モジュールで利用する Controller と View を追加するため、次のコマンドを実行します。
+
+    $ zf create controller error 0 job      // default モジュールに ErrorController を作成する
+    $ zf create action error Error 1 job    // 上記で作成した ErrorController に errorAction を追加する
+    $ zf create controller index 1 job      // defualt モジュールに IndexController を作成する
 
   ** 0 と 1 の箇所は 表示部分を形成する view ファイルを作成するかの指定をします **
 
-    $ zf create controller error 0 admin      // default モジュールに ErrorController を作成する
-    $ zf create action error Error 1 admin    // 上記で作成した ErrorController に errorAction を追加する
-    $ zf create controller index 1 admin      // defualt モジュールに IndexController を作成する
+上記のように表示されると、job モジュールのスケルトンが作成されます。
+
+
+
+/*
+-- ここは別な場所で利用するので一時的に保存！
+すでにコードの準備ができてるのでモックアップに近づくようにリファクタリングしてゆきます。
+
+同じように backend となるモジュール「admin」モジュールを作成します。
+
+    $ zf create module admin
+    Creating the following module and artifacts:
+    /home/Jobeet/application/modules/admin/controllers
+    /home/Jobeet/application/modules/admin/models
+    /home/Jobeet/application/modules/admin/views
+    /home/Jobeet/application/modules/admin/views/scripts
+    /home/Jobeet/application/modules/admin/views/helpers
+    /home/Jobeet/application/modules/admin/views/filters
+    Updating project profile '/home/Jobeet/.zfproject.xml'
+
+ここまで実行すると、frontend と backend となるモジュールの作成が完了しました。
+
+    $ zf create controller error 0 admin        // admin モジュールに ErrorController を作成する
+    $ zf create action error Error 1 admin      // 上記で作成した ErrorController に errorAction を追加する
+    $ zf create controller index 1 admin        // admin モジュールに IndexController を作成する
+*/
+
+
+
+MVC アーキテクチャ
+---------------
+
+もしフレームワークなしで PHP で Web サイトの開発を行うならば、HTML ごとに1つの PHP ファイルのパラダイムを使うでしょう。これらの PHP ファイルは同じ種類の構造を含んでます。それは初期化、全体設定、ページリクエストのためのビジネスロジックやデータベースからレコードの検索、最終的にはページを生成するための HTML コードを含んでいます。
+
+HTML からロジックを分離するためにテンプレートエンジンを利用しているかもしれません。ビジネスロジックからモデルとのやりとりを分離するためにデータベース抽象化レイヤーを利用しているでしょう。しかしたいていの場合、メンテナンスが悪夢になるたくさんのコードで終わることになります。速く作れますが、時間が経つにつれて、とりわけ変更するのが難しくなります。どのように作り、どのように動くのか、あなた以外は誰も理解できないからです。
+
+これらすべての問題に対し、よい解決方法があります。Web 開発の分野では近年コーディングのための最適解として認識されているのはMVC デザインパターンです。手短に言えば、MVC デザインパターンはコードの性質ごとに体系化する方法を定義しています。このパターンは3つのレイヤーにわけられます。
+
+ * Model レイヤーはビジネスロジックを定義します (データベースはこのレイヤーに所属する)。Zend Framework ではモデルデータを application/models/ または application/modules/[module]/models に保存されます。
+ * View はユーザーが情報をやりとりするレイヤーです (テンプレートエンジンはこのレイヤーの一部)。Zend Framework において、View レイヤーは主に PHP テンプレートで構成されます。今日の後で見るようにこれらは application/layouts/scripts/ または application/modules/[module]/layouts/scripts/ に保存されます。
+ * Controller はモデルからデータを取得し、クライアントへ表示するため View にデータを渡す処理を担当します。Zend Framework をインストールした初日に、すべてのリクエストはフロントコントローラ (index.php) によって管理されているのを見ました。
+
+これらフロントコントローラは実際の動作はアクション (action) で行われます。昨日見たようにこれらアクションはモジュール (module) で論理的にグループにわけられます。
+
+[image MVC.png]
+
+今日は、ホームページと求人ページをカスタマイズするために2日目で定義したモックアップを使います。これらを動的なものにもします。この先、Zend Framework のディレクトリを構造とレイヤーのあいだでコードを分離する方法を示すためにたくさんの異なるファイルでたくさんの調整を行います。
+
+
+レイアウト
+-------
+
+まず、モックアップをじっと見てみると各ページのほとんどが同じ部品であることに気づくでしょう。PHP や HTML であろうとなかろうと、コードの重複はわるいことです。ですので、コードが重複している View 要素を抑える方法が必要となります。
+
+この問題を解決する1つの方法としてテンプレートごとにヘッダーとフッターを定義する方法があります:
+
+[image header_footer.png]
+
+しかし、この場合、ヘッダーやフッターは有効な HTML を含んでいません。よい方法であることは違いありません。車輪の再発明をする代わりに、この問題を解決するため別のデザインパターンを使うことにします。それは Decorator デザインパターンです。Decorator デザインパターンは別のやり方で問題を解決します。
+
+グローバルテンプレートによって表示されるコンテンツの後に、デコレートされるテンプレートを使います。
+
+Zend Framework ではグローバルテンプレートをレイアウトと呼びます:
+
+[image layout.png]
+
+アプリケーションのデフォルトテンプレートとして layout.phtml が呼び出されます。それは layouts/scripts/ ディレクトリに保存されます。このディレクトリにはアプリケーションのグローバルテンプレートすべてが置かれます。
+
+
+### レイアウトを有効にするために:
+
+Zend Framework ではアプリケーションのデフォルトでは、レイアウトが有効になっていません。有効に守るために以下のコマンドを実行します。
+
+    $ zf enable layout
+    Layouts have been enabled, and a default layout created at /home/Jobeet/application/layouts/scripts/layout.phtml
+    A layout entry has been added to the application config file.
+
+このコマンドを実行することで、レイアウトを利用することが出来ます。
+
+次に Zend Framework のデフォルトレイアウトを下記コードに置き換えましょう:
+
+[source application/layouts/scripts/layout.phtml]
 
 
