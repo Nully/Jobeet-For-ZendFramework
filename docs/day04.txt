@@ -17,14 +17,32 @@ Jobeetに必要最低限のコードを付け足す
     * 求人を削除するページ
 
 
-### デフォルトのコントローラを無効化する:
+### モジュールの起動設定とデフォルトモジュールの変更:
 Zend Framework はアプリケーションプロジェクトを作成すると、デフォルトで default モジュールでアプリケーションが動作するよう設定されています。
+\
+このデフォルトに設定されている default モジュールを job モジュールに変更するため、application.ini を以下のように修正します。
 
-この default モジュールを無効化する為、次のようにコメントアウトまたは該当行を削除することで default モジュールを無効化することが出来ます。
+    // 以下の行をコメントアウト
+    ;resources.frontController.controllerDirectory = APPLICATION_PATH "/controllers"
+
+    // 以下の3行を追加
+    resources.frontController.moduledirectory = APPLICATION_PATH "/modules"
+    resources.frontController.params.prefixDefaultModule = 1
+    resources.frontController.defaultmodule = "job"
+    resources.modules[] =
+    resources.view[] =
+
+
+    ** `resources.frontController.moduledirectory` は、アプリケーションとして実行させるためのモジュールを格納したディレクトリを指定します。
+    ** `resources.frontController.defaultmodule` は、default モジュールに変わるデフォルトモジュールを指定します。
+    ** `resources.frontController.params.prefixdefaultmodule` は、モジュール名をプリフィックスとして各モジュールの Controller に付加するよう指定します。
+    ** `resources.modules[] =` の記述はモジュールリソースの追加を表します。
+    ** `resources.view[] =` の記述は view オブジェクトをリソースとして利用するための指定です。
+    ** この他にもたくさんのリソースオプションがありますので、公式サイトや、ソースを眺めるなどして新たな発見を楽しんでください
 
 
 ### モジュールを作成する:
-実際に Jobeet で利用する job モジュールのコードは一切準備されていませんので、以下のコマンドを実行し、job モジュールを作成します。
+つぎは実際に Jobeet で利用する job モジュールのコードは一切準備されていませんので、以下のコマンドを実行し、job モジュールを作成します。
 まず、frontend の job モジュールを作成するため、以下のコマンドを実行します。
 
     $ zf create module job
@@ -132,5 +150,87 @@ Zend Framework ではアプリケーションのデフォルトでは、レイ�
 次に Zend Framework のデフォルトレイアウトを下記コードに置き換えましょう:
 
 [source application/layouts/scripts/layout.phtml]
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja"><!-- InstanceBegin template="/Templates/DefaultTemplate.dwt" codeOutsideHTMLIsLocked="false" -->
+<head>
+<title>Jobeet for Zend Framework</title>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+    <meta name="description" content="symfonyのチュートリアル「Jobeet」をZend Frameworkに移植したチュートリアルです。" />
+    <meta name="keywords" content="Jobeet,ZendFramework" />
+    <meta name="title" content="Jobeet for Zend Framework" />
+    <?php echo $this->headLink(); ?>
+</head>
+<body>
+    <div id="container">
+        <div id="header">
+            <h1><a href="#"><img src="images/logo.gif" alt="jobeet" /></a></h1>
+            <p id="post-a-job"><img src="images/post_btn.gif" alt="post a job"/></p>
+        <!-- End header --></div>
+        <div id="contents">
+            <form action="#" method="post" id="searchform">
+                <p id="go-search"><input type="image" id="search" name="search" src="images/go_btn.gif" /></p>
+                <p id="keyword"><input type="text" id="keywords" name="keywords" value="" /></p>
+                <p id="search-description">Enter some keywords (city, country, position, ...)</p>
+            </form>
 
+            <div id="content">
+                <?php echo $this->layout()->content; ?>
+            <!-- End content --></div>
+
+        <!-- End contents --></div>
+        <div id="footer">
+            <ul id="footer-navi">
+                <li><a href="#">text</a></li>
+                <li><a href="#" class="feed">feed</a></li>
+                <li><a href="#">text</a></li>
+                <li><a href="#">text</a></li>
+            </ul>
+
+            <ul id="footer-copy">
+                <li id="footer-cc-license"><a rel="license" href="http://creativecommons.org/licenses/by-sa/2.1/jp/"><img alt="クリエイティブ・コモンズ・ライセンス" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/2.1/jp/80x15.png" /></a></li>
+                <li id="footer-jobeet"><a href="http://www.symfony-project.org/jobeet/1_4/Propel/ja/"><img src="images/jobeet_logo.gif" alt="Jobeet"/></a></li>
+                <li id="footer-zf"><a href="http://framework.zend.com/"><img src="images/zf_logo.gif" alt="powerd by Zend Framework"/></a></li>
+            </ul>
+        <!-- End footer --></div>
+    <!-- End container --></div>
+</body>
+</html>
+
+
+** 標準では、zf create project タスクはプロジェクトのアセットを生成しません。 public ディレクトリ以下であれば、ほとんどの場合、画像やCSSの公開は行えます。
+** 今回は、public ディレクトリ以下に、css images js の3つのディレクトリを作成し、 css には CSSファイルを、 images には画像ファイルを、 js にはJavaScriptファイルを格納していきます。
+
+
+鋭い読者ならデフォルトレイアウトがどこにも記述されていないことにお気づきでしょう。
+
+import.css は生成された HTML のなかに確かに含まれています。しかしどこにも見当たりません。どうやって可能にしているのでしょうか？
+
+スタイルシートはレイアウトの <head> タグブロックで見つかる $this->headLink() 関数の呼び出しによってインクルードされました。
+
+$this->headLink() 関数はヘルパー (helper) と呼ばれます。ヘルパーは Zend Framework によって定義されるクラスオブジェクトで、パラメータを受け取り、HTML コードを返します。
+
+たいていの場合、ヘルパーによって時間が節約され、テンプレートで頻繁に使われるコードスニペットをパッケージにまとめます。
+
+$this->headLinkI() ヘルパーはスタイルシート用に <link> タグを生成します。
+
+それにしても、ヘルパーはどうやって格納するスタイルシートを知るのでしょうか？
+
+View レイヤーはアプリケーションの起動準備ファイルである application/Bootstrap.php に「_init」で始まる関数を作成することで定義することが可能です。
+
+Bootstrap.php に記述するコードは次のとおりです:
+    protected function _initViewHelpers()
+    {
+        $view = $this->bootstrap("view")->getResource("view");
+        $view->headLink(array(
+            "rel"   => "stylesheet",
+            "href"  => "/css/import.css",
+            "type"  => "text/css",
+            "media" => "Screen,Projection,TV",
+        ));
+    }
+    ** Bootstrap.php に記述する「_init」で始まる、protected関数は、起動する前の下準備をするコードを記述するクラスです。
+    ** 「_ini」で始り、protected 関数として定義していれば、好きな関数名をつけることができます。
+
+
+今回記述した「_initViewHelpers」関数は、ヘルパーの利用準備を行うための関数として定義しました。
 
