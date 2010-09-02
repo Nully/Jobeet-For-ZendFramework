@@ -39,51 +39,57 @@ SQLite もしくは MySQL が使える環境であることを確認してくだ
 Zend Framework のインストール
 ---------------
 
-次に Zend Framework をインストールしましょう。
+インストールを実行する前に、最初に Jobeet に関連するファイルをすべて格納するディレクトリを作る必要があります。
+
+    $ mkdir -p /home/zfprojects/jobeet
+
+
+### Zend Framework のバージョンを選ぶ:
+それでは、Zend Framework をインストールします。Zend Framework はかなりの頻度でバージョンアップが行われるので、チュートリアルを開始する時期によってバージョンにかなりの差がありますが、基本的な構造体は変わらないはずです。
+
+このチュートリアルでは、Zend Framework バージョン 1.10.8をインストールすることを想定しています。
+
+
+### Zend Framework のインストール位置を選ぶ:
+
+Zend Framework をグローバルで利用できるようにインストールする、もしくはそれぞれのプロジェクトごとに組み込むことができます。
+
+それぞれのプロジェクトは全体的に独立しているので後者がおすすめです。ローカルでアップグレードすればインストールした Zend Framework が意図せずにいくつかのプロジェクトを壊すことはありません。
+
+これは異なるバージョンの Zend Framework で複数のプロジェクトを持ち、これらを1つづ適切にアップグレードできることを意味します。
+
+ベストプラクティスとして、多くの人が Zend Framework フレームワークをプロジェクトの library/ ディレクトリにインストールします。ですので、最初にこのディレクトリを作ります:
+
+    $ pwd
+    /home/zfprojects/jobeet
+    $ mkdir library
+
 
 ### ダウンロードとインストール
 
-まず、今回のウェブアプリケーション名と同じディレクトリをApacheのドキュメント公開ポイントに「jobeet」という名前で作成します。
+公式サイトからアーカイブをダウンロードして利用することもできますが、今回は Subversion で管理されているソースからインストールを行います。
 
-次に Zend Framework をダウンロードして展開します。
+Zend Framework はフルパッケージと最小構成パッケージの２つが用意されています。
 
-随筆時点での Zend Framework の最新バージョンは「1.10.8」です。
-
-Zend Framework はフルパッケージと最小構成パッケージの２つが用意されていますが、アーカイブをダウンロードして展開する方法でもよいのですが、今回はSubversionを利用して、最新バージョンをのフルパッケージインストールします。
+    * フル構成パッケージ
+    * 最小構成パッケージ
 
 以下のコマンドを入力してください。
 
-    $ svn co http://framework.zend.com/svn/framework/standard/branches/release-1.10/ ZendFramework
+    $ svn co http://framework.zend.com/svn/framework/standard/branches/release-1.10/bin
+    $ cd library
+    $ svn co http://framework.zend.com/svn/framework/standard/branches/release-1.10/library/Zend/
 
 アーカイブをダウンロードする方はこちらからダウンロードして、展開してください。
 
    http://framework.zend.com/download/latest
 
-  ** 開発版をインストールしても構いませんが、 **
 
-ダウンロード完了後、パスを追加し、`zf` コマンドを有効化します。
+チェックアウト完了後、zf コマンドを有効化します。
 
-  $ vi ~/.bashrc
-
-を実行し、以下の内容を記述します。
-
-  export PATH=/path/to/ZendFramework/bin:$PATH
-
-  ** /path/to/はインストールした場所によって変わります **
-
-次に、`ZendFramework/bin` にある `zf.sh` を `zf` に名前を変更します。
-
-  $ cd ZendFramework
-  $ mv zf.sh zf
-
-  ** 場合によってシンボリックリンクを作成することも可能です **
-
-名前の変更が完了したらあと少しでインストールが完了します！
-
-名前の変更が完了したら、次に、`php.ini` の `include_path` に `ZendFramework/library/` へのパスを追加します。
-
-  $ vi /path/to/php.ini
-  include_path = "/already/path/to/include/:/path/to/ZendFramework/library"
+  $ pwd
+  /home/zfprojects/jobeet
+  $　ln -s /home/zfprojects/jobeet/bin/zf.sh /home/zfprojects/jobeet/zf
 
 これで、 Zend Framework のインストールが完了しました。
 
