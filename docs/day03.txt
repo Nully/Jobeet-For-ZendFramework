@@ -1,0 +1,295 @@
+3日目：データモデル
+=====
+
+テキストエディタを開いて PHP コードを書きたい方は、今日のチュートリアルで開発を進めることを知ったらしあわせになるでしょう。
+
+Jobeet のデータモデルを定義し、データベースとの情報のやりとりに ORMツール を使い、アプリケーションの最初のモジュールを作ります。
+
+Zend Framework が多くの作業を私たちの代わりにやってくれるので、PHP コードをあまり書かなくても十分な機能をもつ Web モジュールが手に入ります。
+
+
+Zend Framework のモデルについて
+----------------------------
+
+Zend Framework のORMツールは `Zend_Db_Table` クラスを利用してデータベースへアクセスします。
+
+`Zend_Db_Table` クラスはテーブルに対する様々な共通のタメのメソッドを提供します。
+
+また `Zend_Db_Table` クラスは `Table Data Gateway`(http://www.martinfowler.com/eaaCatalog/tableDataGateway.html)を採用しています。
+
+各モジュールからデータベースへアクセスする場合は、データマッパーなどを利用しアクセスします。
+
+
+リレーションシップモデル
+-------------------
+
+昨日のユーザーストーリーではプロジェクトの主要なオブジェクト:
+
+ * jobs (求人)
+ * affiliates (アフィリエイト)
+ * categories (カテゴリ)
+
+を詳しく説明しました。
+
+下図は対応するエンティティ関係図です:
+[mockup images/diagram.png]
+
+ストーリーで説明したカラムに加えて、いくつかのテーブルには created_at フィールドが追加されています。
+
+このフィールドには、レコードが生成されたときの現在のシステム時刻が Zend Framework によって自動的にセットされます。updated_at フィールドも同様です。レコードが更新されたときのシステム時刻がセットされます。
+
+
+スキーマ
+-----
+
+求人、アフィリエイト、カテゴリを保存するために、当然リレーショナルデータベースが必要となります。
+
+しかし Zend Framework はオブジェクト指向のフレームワークですから、可能ならいつでもオブジェクトとして操作したいでしょう。たとえば、データベースからレコードを取得する SQL 文を書くのではなく、オブジェクトを使います。
+
+リレーショナルデータベースの情報をオブジェクトモデルとしてマッピングする必要があります。このマッピングには ORM ツールを使いますが、Zend Framework には1つの ORM Zend_Db クラスが搭載されています。
+
+ORM には、関連するクラスを生成するために、テーブルとリレーションシップ (関係) についての定義が必要になります。スキーマの記述には既存のデータベースからスキーマを作る方法があります。
+
+
+### データベーススキーマ
+
+まず、 Jobeet 用のデータベースを用意します。
+
+用意するデータベース名は「jobeet」とし、phpMyAdmin及び、コマンドラインから新しくデータベースを作成します。
+
+次にデータベースへ以下のSQL分を全て発行します。
+
+CREATE TABLE `affiliate` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `url` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `email` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `token` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `is_active` tinyint(4) NOT NULL DEFAULT '0',
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `email` (`email`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+
+CREATE TABLE `category` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+
+INSERT INTO `category` VALUES(1, 'Design', NOW(), NOW());
+INSERT INTO `category` VALUES(2, 'Programming', NOW(), NOW());
+INSERT INTO `category` VALUES(3, 'Manager', NOW(), NOW());
+INSERT INTO `category` VALUES(4, 'Administrator', NOW(), NOW());
+
+CREATE TABLE `category_affiliate` (
+  `category_id` bigint(20) NOT NULL,
+  `affiliate_id` bigint(20) NOT NULL,
+  KEY `affiliate_id` (`affiliate_id`),
+  KEY `category_id` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci;
+
+CREATE TABLE `job` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `category_id` bigint(20) NOT NULL,
+  `type` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `company` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `logo` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `url` varchar(255) COLLATE utf8_unicode_ci DEFAULT NULL,
+  `position` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `location` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `description` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `how_to_apply` longtext COLLATE utf8_unicode_ci NOT NULL,
+  `token` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `is_public` tinyint(4) NOT NULL DEFAULT '1',
+  `is_activated` tinyint(4) NOT NULL DEFAULT '0',
+  `email` varchar(255) COLLATE utf8_unicode_ci NOT NULL,
+  `expires_at` datetime NOT NULL,
+  `created_at` datetime NOT NULL,
+  `updated_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `token` (`token`),
+  KEY `category_id` (`category_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci AUTO_INCREMENT=1 ;
+
+INSERT INTO `job` VALUES(1, 2, 'full-time', 'Sensio Labs', 'sensio-labs.gif', 'http://www.sensiolabs.com/', 'Web Developer', 'Paris, France', 'You''ve already developed websites with symfony and you want to work with Open-Source technologies. You have a minimum of 3 years experience in web development with PHP or Java and you wish to participate to development of Web 2.0 sites using the best frameworks available.', 'Send your resume to fabien.potencier [at] sensio.com', 'job_sensio_labs', 1, 1, 'job@example.com', '2010-10-10 00:00:00', NOW(), NOW());
+INSERT INTO `job` VALUES(2, 1, 'part-time', 'Extreme Sensio', 'extreme-sensio.gif', 'http://www.extreme-sensio.com/', 'Web Designer', 'Paris, France', 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.\r\nUtenim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in.\r\nVoluptate velit esse cillum dolore eu fugiat nulla pariatur.\r\nExcepteur sint occaecat cupidatat non proident, sunt in culpaqui officia deserunt mollit anim id est laborum.', 'Send your resume to fabien.potencier [at] sensio.com', 'job_extreme_sensio', 1, 1, 'job@example.com', '2010-10-10 00:00:00', NOW(), NOW());
+
+ALTER TABLE `category_affiliate`
+  ADD CONSTRAINT `category_affiliate_ibfk_2` FOREIGN KEY (`affiliate_id`) REFERENCES `affiliate` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `category_affiliate_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `category` (`id`) ON DELETE CASCADE;
+
+ALTER TABLE `job`
+  ADD CONSTRAINT `job_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `job` (`id`) ON DELETE CASCADE;
+
+==
+
+
+### データベース:
+
+次に、 Zend Framework にデータベースのユーザー名やパスワードを教える必要があります。
+
+次のコマンドを実行することで、Jobeetアプリケーションで利用するデータベースの情報を設定することが可能です。
+
+まず、今回 Jobeet で利用するデータベースアダプタは PDO_Mysql となるので、zf コマンドを利用してデータベースアダプタ名を登録します。
+
+    c:\xampp\htdocs\jobeet>bin\zf.bat configure db-adapter "adapter=pdo_mysql"
+    A db configuration for the production section has been written to the application config file.
+
+次に、開発環境で利用するデータベースの接続情報を登録します。
+
+    $ zf configure db-adapter "username=[uname]&password=[mypass]&dbname=[mydb]" development
+    A db configuration for the development section has been written to the application config file.
+
+ ** [] 内は環境にあわせて修正してください **
+ ** でサポートされている `adapter` は、多数ありますが、今回は「mysql」を利用します **
+
+最後に次のコマンドを実行し、データベースと情報をやり取りするためのPHPファイルが models/DbTable ディレクトリに生成されます。 。
+
+    c:\xampp\htdocs\jobeet>zf create db-table.from-database
+    Creating a DbTable at /home/Jobeet/application/models/DbTable/Affiliate.php
+    Creating a DbTable at /home/Jobeet/application/models/DbTable/Category.php
+    Creating a DbTable at /home/Jobeet/application/models/DbTable/CategoryAffiliate.php
+    Creating a DbTable at /home/Jobeet/application/models/DbTable/Job.php
+    Updating project profile '/home/Jobeet/.zfproject.xml'
+
+
+### リファレンスマップを作成:
+Zend Framework に標準で準備されているリファレンスマップは、テーブル同士の関係性を示したマップです。
+
+リファレンスマップを定義しておくことで、例えば「ID1のユーザーが投稿したブログ記事を取得する」などのようなことが簡潔に記述することができます。
+
+では、先程示したリレーションシップモデルに沿ってリファレンスマップを作成していきます。
+
+    // models/DbTable/Job.php
+    class Jobeet_Model_DbTable_Job extends Zend_Db_Table_Abstract
+    {
+
+        protected $_name = 'job';
+
+        protected $_dependentTables = array( "Jobeet_Model_DbTable_Category" );
+
+        protected $_rowClass = "Jobeet_Model_Job";
+    }
+
+
+    // models/DbTable/Category.php
+    class Jobeet_Model_DbTable_Category extends Zend_Db_Table_Abstract
+    {
+
+        protected $_name = 'category';
+
+        protected $_dependentTables = array( "Jobeet_Model_DbTable_CategoryAffiliate" );
+
+        protected $_referenceMap = array(
+            "Category" => array(
+                "columns" => array( "id" ),
+                "refColumn" => "category_id",
+                "refTableClass" => "Jobeet_Model_DbTable_Job"
+            )
+        );
+
+        protected $_rowClass = "Jobeet_Model_Category";
+    }
+
+
+    // models/DbTable/CategoryAffiliate.php
+    class Jobeet_Model_DbTable_CategoryAffiliate extends Zend_Db_Table_Abstract
+    {
+
+        protected $_name = 'category_affiliate';
+
+        protected $_referenceMap = array(
+            "Category" => array(
+                "columns" => array( "category_id" ),
+                "refColumn" => "id",
+                "refTableClass" => "Jobeet_Model_DbTable_Category"
+            ),
+            "Affiliate" => array(
+                "columns" => array( "affiliate_id" ),
+                "refColumn" => "id",
+                "refTableClass" => "Jobeet_Model_DbTable_Affiliate"
+            )
+        );
+    }
+
+
+    // models/DbTable/Affiliate.php
+    class Jobeet_Model_DbTable_Affiliate extends Zend_Db_Table_Abstract
+    {
+
+        protected $_name = 'affiliate';
+
+        protected $_dependentTables = array( "Jobeet_Model_DbTable_CategoryAffiliate" );
+
+        protected $_rowClass = "Jobeet_Model_Affiliate";
+    }
+
+「$_rowClass」は、単一行で利用するモデルクラス名を指定します。
+
+** リファレンスマップの詳細については公式ページ(http://framework.zend.com/manual/ja/zend.db.table.relationships.html)をご覧ください。 **
+
+### モデルの作成:
+
+Zend Frameworkでは、データベースに保存されている情報の1つ1つをオブジェクトとして扱うことができる機能が備わっています。
+
+これは[行データゲートウェイ](http://www.martinfowler.com/eaaCatalog/rowDataGateway.html)と呼ばれる実装パターンのことを言います。
+
+このパターンに習い、それぞれのモデルクラスを作成していきます。
+
+    // models/Job.php
+    class Jobeet_Model_Job extends Zend_Db_Table_Row
+    {
+    }
+
+
+    // models/Category.php
+    class Jobeet_Model_Category extends Zend_Db_Table_Row
+    {
+    }
+
+
+    // models/Affiliate.php
+    class Jobeet_Model_Affiliate extends Zend_Db_Table_Row
+    {
+    }
+
+
+### モデルマッパーの作成:
+
+モデルマッパーは、各ゲートウェイ（Zend_Db_Table_Abstractを継承したクラス）の仲介を行うクラスで、主に更新や、削除などのような機能をまとめておきます。
+
+まだ、詳細なコードは書きませんが、今後データベース情報の取得・更新などのようなコードはこのクラスの中に記述していきます。
+
+
+    // models/JobMapper.php
+    class Jobeet_Model_JobMapper
+    {
+    }
+
+
+    // models/CategoryMapper.php
+    class Jobeet_Model_CategoryMapper
+    {
+    }
+
+
+    // models/AffiliateMapper.php
+    class Jobeet_Model_AffiliateMapper
+    {
+    }
+
+
+また明日！
+--------
+
+はい、今日はここまでです。今日はあまりにも長いコードを書きすぎたので、お疲れかと思います。
+
+また、3日目からは激しいコードが襲いかかってきますが、Jobeet For ZendFrameworkは git で管理されているため、各日にちごとにタグ管理しています。
+
+何か面倒なコードがあった場合はコピーして利用するか、自力で作成してください！
+
+明日は、アプリケーションが何を行うのかを明らかにしチュートリアルの間に実装する必要のある要件を話します。
