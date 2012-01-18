@@ -15,7 +15,14 @@
       </controllersDirectory>
       <formsDirectory enabled="false"/>
       <layoutsDirectory enabled="false"/>
-      <modelsDirectory/>
+      <modelsDirectory>
+        <dbTableDirectory>
+          <dbTableFile dbTableName="Affiliate"/>
+          <dbTableFile dbTableName="Category"/>
+          <dbTableFile dbTableName="CategoryAffiliate"/>
+          <dbTableFile dbTableName="Job"/>
+        </dbTableDirectory>
+      </modelsDirectory>
       <modulesDirectory enabled="false"/>
       <viewsDirectory>
         <viewScriptsDirectory>
