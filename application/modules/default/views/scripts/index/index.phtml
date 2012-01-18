@@ -1,0 +1,19 @@
+<?php $this->headLink()->appendStylesheet("/css/jobs.css", "all"); ?>
+
+<div id="jobs">
+<table class="jobs">
+<?php foreach($this->jobs as $job): ?>
+<tr class="<?php echo $this->cycle(array( "odd", "even" ))->next(); ?>">
+    <td class="location"><?php echo $this->escape($job->location); ?></td>
+    <td class="position"><a href="<?php echo $this->url(array(
+        "controller" => "index",
+        "action"     => "show",
+        "module"     => "default",
+        "id"         => $job->id
+    )); ?>"><?php echo $this->escape($job->position); ?></a></td>
+    <td class="company"><?php echo $this->escape($job->company); ?></td>
+</tr>
+<?php endforeach; ?>
+</table>
+<!-- End jobs --></div>
+
