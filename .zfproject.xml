@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<projectProfile type="default" version="1.10">
+<projectProfile type="default" version="1.11.11">
   <projectDirectory>
     <projectProfileFile filesystemName=".zfproject.xml"/>
-    <applicationDirectory classNamePrefix="Application_">
+    <applicationDirectory classNamePrefix="Jobeet_">
       <apisDirectory enabled="false"/>
       <configsDirectory>
         <applicationConfigFile type="ini"/>
@@ -56,12 +56,15 @@
     <temporaryDirectory enabled="false"/>
     <testsDirectory>
       <testPHPUnitConfigFile filesystemName="phpunit.xml"/>
+      <testPHPUnitBootstrapFile filesystemName="bootstrap.php"/>
       <testApplicationDirectory>
-        <testApplicationBootstrapFile filesystemName="bootstrap.php"/>
+        <testApplicationControllerDirectory>
+          <testApplicationControllerFile forControllerName="Index">
+            <testApplicationActionMethod forActionName="index"/>
+          </testApplicationControllerFile>
+        </testApplicationControllerDirectory>
       </testApplicationDirectory>
-      <testLibraryDirectory>
-        <testLibraryBootstrapFile filesystemName="bootstrap.php"/>
-      </testLibraryDirectory>
+      <testLibraryDirectory/>
     </testsDirectory>
   </projectDirectory>
 </projectProfile>
