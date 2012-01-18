@@ -1,0 +1,67 @@
+<?php echo $this->doctype(); ?>
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja">
+<head>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+
+<?php echo $this->headTitle(); ?>
+
+<link rel="shortcut icon" href="<?php echo $this->baseUrl("/images/favicon.ico"); ?>" />
+
+<meta name="description" content="symfonyのチュートリアル「Jobeet」をZend Frameworkに移植したチュートリアルです。" />
+<meta name="keywords" content="Jobeet,ZendFramework" />
+<meta name="title" content="Jobeet for Zend Framework" />
+
+<?php echo $this->headMeta(); ?>
+
+<?php echo $this->headLink(); ?>
+
+<?php echo $this->headScript(); ?>
+</head>
+<body>
+    <div id="container">
+        <div id="header">
+            <h1><a href="<?php echo $this->url(array("controller" => "index", "module" => "default")); ?>"><img src="<?php echo $this->baseUrl("images/logo.gif"); ?>" alt="jobeet" /></a></h1>
+            <p id="post-a-job"><a href="<?php echo $this->url(array("controller" => "index", "module" => "default")); ?>"><img src="<?php echo $this->baseUrl("images/post_btn.gif"); ?>" alt="post a job"/></a></p>
+        <!-- End header --></div>
+        <div id="contents">
+            <form action="#" method="post" id="searchform">
+                <p id="go-search"><input type="image" id="search" name="search" src="<?php echo $this->baseUrl("images/go_btn.gif"); ?>" /></p>
+                <p id="keyword"><input type="text" id="keywords" name="keywords" value="" /></p>
+                <p id="search-description">Enter some keywords (city, country, position, ...)</p>
+            </form>
+
+            <div id="content">
+                <?php if($this->noticeMessage): ?>
+                <div id="noticeMessage">
+                    <?php echo $this->escape($this->noticeMessage); ?>
+                </div>
+                <?php endif; ?>
+
+                <?php if($this->errorMessage): ?>
+                <div id="errorMessage">
+                    <?php echo $this->escape($this->errorMessage); ?>
+                </div>
+                <?php endif; ?>
+
+                <?php echo $this->layout()->content; ?>
+            <!-- End content --></div>
+
+        <!-- End contents --></div>
+        <div id="footer">
+            <ul id="footer-navi">
+                <li><a href="#">text</a></li>
+                <li><a href="#" class="feed">feed</a></li>
+                <li><a href="#">text</a></li>
+                <li><a href="#">text</a></li>
+            </ul>
+
+            <ul id="footer-copy">
+                <li id="footer-cc-license"><a rel="license" href="http://creativecommons.org/licenses/by-sa/2.1/jp/"><img alt="クリエイティブ・コモンズ・ライセンス" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/2.1/jp/80x15.png" /></a></li>
+                <li id="footer-jobeet"><a href="http://www.symfony-project.org/jobeet/1_4/Propel/ja/"><img src="<?php echo $this->baseUrl("images/jobeet_logo.gif"); ?>" alt="Jobeet"/></a></li>
+                <li id="footer-zf"><a href="http://framework.zend.com/"><img src="<?php echo $this->baseUrl("images/zf_logo.gif"); ?>" alt="powerd by Zend Framework"/></a></li>
+            </ul>
+        <!-- End footer --></div>
+    <!-- End container --></div>
+</body>
+</html>

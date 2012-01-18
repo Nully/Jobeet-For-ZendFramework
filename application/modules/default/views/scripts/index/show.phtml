@@ -1,0 +1,40 @@
+<?php $this->headTitle()->prepend($this->escape($this->job->company)); ?>
+<?php $this->headLink()->appendStylesheet("/css/job.css"); ?>
+
+<div id="job">
+  <h1><?php echo $this->escape($this->job->company); ?></h1>
+  <h2><?php echo $this->escape($this->job->location); ?></h2>
+  <h3><?php echo $this->escape($this->job->position) ; ?><small> - <?php echo $this->escape($this->job->type); ?></small></h3>
+
+  <?php if ($this->job->logo): ?>
+    <div class="logo">
+      <a href="<?php echo $this->escape($this->job->url); ?>">
+        <img src="/uploads/jobs/<?php echo $this->escape($this->job->logo); ?>"
+          alt="<?php echo $this->escape($this->job->company); ?> logo" />
+      </a>
+    </div>
+  <?php endif ?>
+
+  <div class="description">
+    <?php echo nl2br($this->escape($this->job->description)); ?>
+  </div>
+
+  <h4>How to apply?</h4>
+
+  <p class="how_to_apply"><?php echo $this->job->how_to_apply; ?></p>
+
+  <div class="meta">
+      <small>posted on <?php echo $this->job->formatDate("created_at"); ?></small>
+  </div>
+
+  <div style="padding: 20px 0">
+    <a href="<?php echo $this->url(array(
+        "controller" => "index",
+        "action"     => "edit",
+        "module"     => "default",
+        "id"         => $this->job->id
+    )); ?>">
+      Edit
+    </a>
+  </div>
+</div>
