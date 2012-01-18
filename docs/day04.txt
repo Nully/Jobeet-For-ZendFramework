@@ -1,0 +1,470 @@
+4日目：ControllerとView
+=====
+
+昨日は Zend Framework がどうやってデータベースエンジン間の違いを吸収していたり、オブジェクト指向クラスに変換しているかを見ました。
+
+
+Jobeetに必要最低限のコードを付け足す
+-------------------------------
+
+昨日はテーブルデータゲートウェイを使ったデータベースへのアクセスモデルを作りましたが、モジュールが実際に処理を行うControllerや、表示を行うViewを作成していませんので次のコマンドを打ち込みます。
+
+今日は昨日作った job モジュールの基本的なカスタマイズを続けます。:
+
+    * 求人の一覧ページ
+    * 新しく求人を投稿するページ
+    * 投稿した求人を更新するページ
+    * 求人を削除するページ
+
+
+### モジュールの起動設定とデフォルトモジュールの変更:
+
+Zend Framework はプロジェクトを作成すると、モジュールが存在しませんが、モジュールがあるかのように振る舞います。
+
+モジュールを分けることで、各モジュールのコントローラーやビュースクリプトが散乱することを防ぎ、見通しの良い環境を作ることができます。
+
+まずは、モジュール機能を有効化するため、以下のコマンドを打ち込み、実行します。
+
+    c:\xampp\htdocs\jobeet>bin\zf.bat create module default
+
+すると、「modules」ディレクトリに「default」ディレクトリが出来上がります。
+
+同じように管理者用モジュール（adminモジュール）も作成します。
+
+    c:\xampp\htdocs\jobeet>bin\zf.bat create module admin
+
+ディレクトリの中身はまだ空っぽですが、これからモジュール毎にコントローラーや、モデル、ビュースクリプト等を作成していきます。
+
+次に、デフォルトモジュールにプレフィックス無しの状態でも動作するように設定ファイルを修正します。
+
+次に、作成した default と admin モジュールで利用する Controller と View を追加するため、次のコマンドを実行します。
+
+    c:\xampp\htdocs\jobeet>bin\zf.bat create controller error 1 default      // default モジュールに ErrorController を作成する
+    c:\xampp\htdocs\jobeet>bin\zf.bat create action error error 1 default    // 上記で作成した ErrorController に errorAction を追加する
+    c:\xampp\htdocs\jobeet>bin\zf.bat create controller index 1 default      // defualt モジュールに IndexController を作成する
+
+    c:\xampp\htdocs\jobeet>bin\zf.bat create controller error 1 admin
+    c:\xampp\htdocs\jobeet>bin\zf.bat create action error error 1 admin
+    c:\xampp\htdocs\jobeet>bin\zf.bat create controller index 1 admin
+
+次に、一番最初にプロジェクトを作成したときに作られた「ErrorController.php」からerrorActionのコードをコピー&ペーストします。
+
+コピー対象は「controllers/ErrorController.php」になります。
+
+
+MVC アーキテクチャ
+---------------
+
+もしフレームワークなしで PHP で Web サイトの開発を行うならば、HTML ごとに1つの PHP ファイルのパラダイムを使うでしょう。これらの PHP ファイルは同じ種類の構造を含んでます。それは初期化、全体設定、ページリクエストのためのビジネスロジックやデータベースからレコードの検索、最終的にはページを生成するための HTML コードを含んでいます。
+
+HTML からロジックを分離するためにテンプレートエンジンを利用しているかもしれません。ビジネスロジックからモデルとのやりとりを分離するためにデータベース抽象化レイヤーを利用しているでしょう。しかしたいていの場合、メンテナンスが悪夢になるたくさんのコードで終わることになります。速く作れますが、時間が経つにつれて、とりわけ変更するのが難しくなります。どのように作り、どのように動くのか、あなた以外は誰も理解できないからです。
+
+これらすべての問題に対し、よい解決方法があります。Web 開発の分野では近年コーディングのための最適解として認識されているのはMVC デザインパターンです。手短に言えば、MVC デザインパターンはコードの性質ごとに体系化する方法を定義しています。このパターンは3つのレイヤーにわけられます。
+
+ * Model レイヤーはビジネスロジックを定義します (データベースはこのレイヤーに所属する)。Zend Framework ではモデルデータを application/models/ または application/modules/[module]/models に保存されます。
+ * View はユーザーが情報をやりとりするレイヤーです (テンプレートエンジンはこのレイヤーの一部)。Zend Framework において、View レイヤーは主に PHP テンプレートで構成されます。今日の後で見るようにこれらは application/layouts/scripts/ または application/modules/[module]/layouts/scripts/ に保存されます。
+ * Controller はモデルからデータを取得し、クライアントへ表示するため View にデータを渡す処理を担当します。Zend Framework をインストールした初日に、すべてのリクエストはフロントコントローラ (index.php) によって管理されているのを見ました。
+
+これらフロントコントローラは実際の動作はアクション (action) で行われます。昨日見たようにこれらアクションはモジュール (module) で論理的にグループにわけられます。
+
+[image images/mvc.png]
+
+今日は、ホームページと求人ページをカスタマイズするために2日目で定義したモックアップを使います。これらを動的なものにもします。この先、Zend Framework のディレクトリを構造とレイヤーのあいだでコードを分離する方法を示すためにたくさんの異なるファイルでたくさんの調整を行います。
+
+
+レイアウト
+-------
+
+まず、モックアップをじっと見てみると各ページのほとんどが同じ部品であることに気づくでしょう。PHP や HTML であろうとなかろうと、コードの重複はわるいことです。ですので、コードが重複している View 要素を抑える方法が必要となります。
+
+この問題を解決する1つの方法としてテンプレートごとにヘッダーとフッターを定義する方法があります:
+
+[image images/header_footer.png]
+
+しかし、この場合、ヘッダーやフッターは有効な HTML を含んでいません。よい方法であることは違いありません。車輪の再発明をする代わりに、この問題を解決するため別のデザインパターンを使うことにします。それは Decorator デザインパターンです。Decorator デザインパターンは別のやり方で問題を解決します。
+
+グローバルテンプレートによって表示されるコンテンツの後に、デコレートされるテンプレートを使います。
+
+Zend Framework ではグローバルテンプレートをレイアウトと呼びます:
+
+[image imageslayout.png]
+
+アプリケーションのデフォルトテンプレートとして layout.phtml が呼び出されます。それは layouts/scripts/ ディレクトリに保存されます。このディレクトリにはアプリケーションのグローバルテンプレートすべてが置かれます。
+
+
+### レイアウトを有効にするために:
+
+Zend Framework ではアプリケーションのデフォルトでは、レイアウトが有効になっていません。有効に守るために以下のコマンドを実行し、レイアウトを有効にします。
+
+    c:\xampp\htdocs\jobeet>bin\zf.bat enable layout
+
+次に Zend Framework のデフォルトレイアウトを下記コードに置き換えましょう:
+
+
+    // application/layouts/scripts/layout.phtml
+    <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+    <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="ja"><!-- InstanceBegin template="/Templates/DefaultTemplate.dwt" codeOutsideHTMLIsLocked="false" -->
+    <head>
+    <title>Jobeet for Zend Framework</title>
+    <meta http-equiv="content-type" content="text/html;charset=utf-8" />
+        <meta name="description" content="symfonyのチュートリアル「Jobeet」をZend Frameworkに移植したチュートリアルです。" />
+        <meta name="keywords" content="Jobeet,ZendFramework" />
+        <meta name="title" content="Jobeet for Zend Framework" />
+        <?php echo $this->headLink(); ?>
+    </head>
+    <body>
+        <div id="container">
+            <div id="header">
+                <h1><a href="#"><img src="<?php echo $this->baseUrl("images/logo.gif"); ?>" alt="jobeet" /></a></h1>
+                <p id="post-a-job"><img src="<?php echo $this->baseUrl("images/post_btn.gif"); ?>" alt="post a job"/></p>
+            <!-- End header --></div>
+            <div id="contents">
+                <form action="#" method="post" id="searchform">
+                    <p id="go-search"><input type="image" id="search" name="search" src="<?php echo $this->baseUrl("images/go_btn.gif"); ?>" /></p>
+                    <p id="keyword"><input type="text" id="keywords" name="keywords" value="" /></p>
+                    <p id="search-description">Enter some keywords (city, country, position, ...)</p>
+                </form>
+
+                <div id="content">
+                    <?php if($this->noticeMessage): ?>
+                    <div id="noticeMessage">
+                        <?php echo $this->escape($this->noticeMessage); ?>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php if($this->errorMessage): ?>
+                    <div id="errorMessage">
+                        <?php echo $this->escape($this->errorMessage); ?>
+                    </div>
+                    <?php endif; ?>
+
+                    <?php echo $this->layout()->content; ?>
+                <!-- End content --></div>
+
+            <!-- End contents --></div>
+            <div id="footer">
+                <ul id="footer-navi">
+                    <li><a href="#">text</a></li>
+                    <li><a href="#" class="feed">feed</a></li>
+                    <li><a href="#">text</a></li>
+                    <li><a href="#">text</a></li>
+                </ul>
+
+                <ul id="footer-copy">
+                    <li id="footer-cc-license"><a rel="license" href="http://creativecommons.org/licenses/by-sa/2.1/jp/"><img alt="クリエイティブ・コモンズ・ライセンス" style="border-width:0" src="http://i.creativecommons.org/l/by-sa/2.1/jp/80x15.png" /></a></li>
+                    <li id="footer-jobeet"><a href="http://www.symfony-project.org/jobeet/1_4/Propel/ja/"><img src="<?php echo $this->baseUrl("images/jobeet_logo.gif"); ?>" alt="Jobeet"/></a></li>
+                    <li id="footer-zf"><a href="http://framework.zend.com/"><img src="<?php echo $this->baseUrl("images/zf_logo.gif"); ?>" alt="powerd by Zend Framework"/></a></li>
+                </ul>
+            <!-- End footer --></div>
+        <!-- End container --></div>
+    </body>
+    </html>
+
+
+### CSSファイルとJavaScriptファイル:
+
+鋭い読者ならデフォルトレイアウトがどこにも記述されていないことにお気づきでしょう。
+
+import.css は生成された HTML のなかに確かに含まれています。しかしどこにも見当たりません。どうやって可能にしているのでしょうか？
+
+スタイルシートはレイアウトの <head> タグブロックで見つかる $this->headLink() 関数の呼び出しによってインクルードされました。
+
+$this->headLink() 関数はヘルパー (helper) と呼ばれます。ヘルパーは Zend Framework によって定義されるクラスオブジェクトで、パラメータを受け取り、HTML コードを返します。
+
+たいていの場合、ヘルパーによって時間が節約され、テンプレートで頻繁に使われるコードスニペットをパッケージにまとめます。
+
+$this->headLinkI() ヘルパーはスタイルシート用に <link> タグを生成します。
+
+それにしても、ヘルパーはどうやって格納するスタイルシートを知るのでしょうか？
+
+View レイヤーはアプリケーションの起動準備ファイルである application/Bootstrap.php に「_init」で始まる関数を作成することで定義することが可能です。
+
+Bootstrap.php に記述するコードは次のとおりです:
+    // doctype を設定します
+    protected function _initDoctype()
+    {
+        $view = $this->bootstrap("view")->getResource("view");
+        $view->doctype("XHTML_TRANSITIONAL");
+    }
+
+
+    protected function _initViewHelpers()
+    {
+        $view = $this->bootstrap("view")->getResource("view");
+        $view->headLink(array(
+            "rel"   => "stylesheet",
+            "href"  => "/css/import.css",
+            "type"  => "text/css",
+            "media" => "Screen,Projection,TV",
+        ));
+    }
+
+次に、 Jobeet アプリケーションの設定ファイル application.ini に次の記述を「resources.frontController.moduleDirectory = APPLICATION_PATH "/modules"」の次の行に追加します。
+
+    resources.view[] =
+
+このように記述することで、ビューリソースを手軽に利用することができるようになります。
+
+** CSSファイルとJavaScriptファイルはすでにプロジェクトに同梱されています。今回はこの同梱済みのファイルを利用していきます。 **
+
+
+## デフォルトモジュールのホームページ:
+
+3日目に見たように、ホームページは default モジュールの index アクションで作られています。
+
+このアクションに関連するビュースクリプトは views/scripts/index.phtml です。
+
+
+### アクション:
+
+各アクションはクラスメソッドで表されます。ホームページでは IndexController （コントローラー名の末尾に Controller とつけたもの）の indexAction（Actionの先頭にアクション名をつけたもの） が使われます。
+データベースから全ての求人情報を取得します。
+
+    class Default_IndexController extends Zend_Controller_Action
+    {
+        public function init()
+        {
+            /* Initialize action controller here */
+        }
+
+        public function indexAction()
+        {
+            $mapper = new Jobeet_Model_JobMapper();
+            $this->view->jobs = $mapper->fetchAll();
+        }
+
+
+    }
+
+
+コードを良く見てみると、すべての求人情報を検索するクエリは一切記述されていません。そのかわり、 Jobeet_Model_JobMapper クラスの fetchAll メソッドを呼び出しています。
+
+fetchAll メソッドの返り値はテンプレートに割り当てる必要があります。
+
+Controller からのデータをViewに渡すには、次のように新しいプロパティを作ります。
+
+    public function fooBarAction()
+    {
+        $this->view->foo = "bar";
+        $this->view->bar = array( "fizz", "bazz" );
+    }
+
+
+#### データマッパー:
+
+先ほどコントローラーで記述した fetchAll メソッドを Jobeet_Model_JobMapper クラスに記述します。コードは次のとおりです:
+
+    /**
+     * テーブルゲートウェイを取得する
+     *
+     * @access public
+     * @return Zend_Db_Table_Abstract
+     */
+    public function getDbTable()
+    {
+        if(!$this->_dbTable)
+            $this->setDbTable(new Jobeet_Model_DbTable_Job());
+
+        return $this->_dbTable;
+    }
+
+    /**
+     * テーブルゲートウェイをセットする
+     *
+     * @access public
+     * @param  $dbTable   Zend_Db_Table_Abstract   テーブルゲートウェイ
+     * @return Jobeet_Model_JobMapper
+     */
+    public function setDbTable($dbTable)
+    {
+        $this->_dbTable = $dbTable;
+        return $this;
+    }
+
+
+    /**
+     * 全ての求人情報を取得する
+     *
+     * @access public
+     * @param  $offset   Int   ページ番号
+     * @param  $limit    Int    取得件数
+     * @return Zend_Db_Table_Rowset
+     */
+    public function fetchAll()
+    {
+        return $this->getDbTable()->fetchAll();
+    }
+
+
+今後、データベースから情報を取り出したり、更新したりする際はマッパークラスに記述していきます。
+
+
+#### テンプレート:
+
+デフォルトでは、アクションに関連するテンプレートは Zend Framework によって推測されます。（モジュールディレクトリの views/scripts/コントローラー名/アクション名.phtml）
+index.phtml テンプレートはすべての求人用のHTMLテーブルを生成します。
+
+現在のテンプレートは Zend Framework の初期HTMLが表示されているので、これを利用できるカラムのみ表示するようにします。
+
+// default/views/scripts/index/index.phtml
+
+    <?php $this->headLink()->appendStylesheet("/css/jobs.css", "all"); ?>
+
+    <div id="jobs">
+    <table class="jobs">
+    <?php foreach($this->jobs as $job): ?>
+    <tr class="<?php echo $this->cycle(array( "odd", "even" ))->next(); ?>">
+        <td class="location"><?php echo $this->escape($job->location); ?></td>
+        <td class="position"><a href="<?php echo $this->url(array(
+            "controller" => "index",
+            "action"     => "show",
+            "module"     => "default",
+            "id"         => $job->id
+        )); ?>"><?php echo $this->escape($job->position); ?></a></td>
+        <td class="company"><?php echo $this->escape($job->company); ?></td>
+    </tr>
+    <?php endforeach; ?>
+    </table>
+    <!-- End jobs --></div>
+
+
+テンプレートの中で呼び出されている $this->url() 関数は Zend Framework のヘルパーで、明日詳しく話します。
+
+
+### Jobページテンプレート
+
+求人ページのテンプレートを新しく作りましょう。「default/views/scripts/show.phtml」を作り、次のコードを記述してください:
+
+    // default/views/scripts/index/show.phtml
+    <?php $this->headTitle()->prepend($this->escape($this->job->company)); ?>
+    <?php $this->headLink()->appendStylesheet("css/job.css"); ?>
+
+    <div id="job">
+      <h1><?php echo $this->escape($this->job->company); ?></h1>
+      <h2><?php echo $this->escape($this->job->location); ?></h2>
+      <h3>
+        <?php echo $this->escape($this->job->position) ; ?>
+        <small> - <?php echo $this->escape($this->job->type); ?></small>
+      </h3>
+
+      <?php if ($this->job->logo): ?>
+        <div class="logo">
+          <a href="<?php echo $this->escape($this->job->url); ?>">
+            <img src="/uploads/jobs/<?php echo $this->escape($this->job->logo); ?>"
+              alt="<?php echo $this->escape($this->job->company); ?> logo" />
+          </a>
+        </div>
+      <?php endif ?>
+
+      <div class="description">
+        <?php echo nl2br($this->escape($this->job->description)); ?>
+      </div>
+
+      <h4>How to apply?</h4>
+
+      <p class="how_to_apply"><?php echo $this->job->how_to_apply; ?></p>
+
+      <div class="meta">
+        <small>posted on <?php echo $this->job->formatDate("created_at", "Y/m/d"); ?></small>
+      </div>
+
+      <div style="padding: 20px 0">
+        <a href="<?php echo $this->url(array(
+            "controller" => "index",
+            "action"     => "edit",
+            "module"     => "default",
+            "id"         => $this->job->id
+        )); ?>">
+          Edit
+        </a>
+      </div>
+    </div>
+
+
+求人情報を表示するために、テンプレートはアクションから渡される $job 変数を使います。
+
+    // default/controllers/IndexController.php
+    public function showAction()
+    {
+        $mapper = new Jobeet_Model_JobMapper();
+        $this->view->job = $mapper->find($this->_request->getParam("id", 0));
+        if(empty($this->view->job)) {
+            throw new Zend_Controller_Action_Exception(
+                "Colu'd not found job.",
+                404
+            );
+        }
+    }
+
+
+### Jobeet_Model_Jobに日付フォーマットメソッドを追加:
+
+日付フォーマットを手軽に利用するために、 Jobeet_Model_Job クラスに formatDate メソッドを追加します:
+
+    // models/Job.php
+    public function formatDate($column, $format = "Y/MM/d")
+    {
+        $time = $this->{$column};
+        $date = new Zend_Date($date);
+        return $date->toString($format);
+    }
+
+
+### 求人ページのアクション:
+
+求人のページは default モジュール にある index コントローラーの showAction メソッドで生成されます。
+
+index アクションに関しては、今回の場合、Jobeet_Model_JobMapper クラスは Jobeet_Model_DbTable_Job クラスの find() メソッドを利用して求人情報を検索するために使われます。
+このメソッドのパラメータは job、主キーの一意性をもつ識別子です。次の節では $this->_request->getParam('id', 0) ステートメントが job の主キーを返す理由を説明します。
+
+求人データがデータベースに存在しない場合に、ユーザーを404エラーのページに転送させることを考えます。
+この役目はまさに 例外を投げることです。最初の引数はエラーメッセージを設定し、第2引数では HTTP のステータスコードである 404（NotFound）のコードを指定します。
+
+すると、 Zend Framework はフロントコントローラーで例外をキャッチし、投げられた例外を元に再度エラーコントローラーをディスパッチします。
+
+これにより、 Zend Framework のエラー画面への繊維は基本的に例外を利用し、遷移させます。
+
+
+リクエストとレスポンス
+
+/ ページや /index/show/id/1 ページをブラウザ上で見る際、データが Web サーバーのあいだを往復し始めます。ブラウザは__リクエスト (request) __を送信し、サーバーはレ__スポンス (response)__ を返します。
+
+すでに Zend Framework がリクエストを Zend_Controller_Request_Http オブジェクトでカプセル化しています。Zend_Controller_Action::getRequest() または $_request プロパティで参照することができます。
+
+Zend Framework はオブジェクト指向フレームワークであるのでレスポンスもオブジェクトです。
+これは Zend_Controller_Response_Http クラスです。$this->getResponse() メソッドを呼び出すか、$_response プロパティにアクセスすることで、アクションのなかからレスポンスオブジェクトにアクセスすることができます。
+
+これらオブジェクトは PHP 関数やグローバル変数から情報を受け取るために便利なメソッドをたくさん提供します。
+
+
+
+#### リクエスト
+
+Zend_Controller_Request_Http クラスは $_SERVER、$_COOKIE、$_GET、$_POST、$_FILES といった PHP のスーパーグローバルをラップしています:
+
+
+メソッドの名前	対応する PHP のスーパーグローバル
+getMethod()	$_SERVER['REQUEST_METHOD']
+getRequestUri()	$_SERVER['REQUEST_URI']
+getHttpHost()	$_SERVER['HTTP_HOST']
+isXmlHttpRequest()	$_SERVER['X_REQUESTED_WITH'] == 'XMLHttpRequest'
+getHttpHeader()	$_SERVER
+getCookie()	$_COOKIE
+isSecure()	$_SERVER['HTTPS']
+getQuery()	$_GET
+getPost()	$_POST
+getPathInfo()	$_SERVER['PATH_INFO']
+getClientIp()	$_SERVER['REMOTE_ADDR']
+
+すでに getParam() メソッドを使ってリクエストパラメータにアクセスしました。このメソッドは $_GET または $_POST グローバル変数や PATH_INFO 変数から値を返します。
+
+これらのなかの特定の1つを取得できるようにしたいのであれば、getQuery() や getPost() や getPathInfo() メソッドを利用する必要があります。
+
+
+また明日
+
+今日は、Zend Framework で使われているいくつかのデザインパターンを説明しました。プロジェクトのディレクトリ構造の理解が進むことを願っております。
+レイアウトとテンプレートファイルを操作することでテンプレートで遊びました。ヘルパーとアクションのおかげでこれらを少し動的なものに変えることもしました。
+
+明日は、今日使った url() ヘルパーとルーティングについて学びます。
+
