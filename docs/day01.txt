@@ -35,19 +35,23 @@ SQLite もしくは MySQL が使える環境であることを確認してくだ
 
 もし `mod_rewrite` モジュールが有効でないならば、極力有効化することをオススメします。
 
+Windowsを利用しているユーザーは[XAMPP](http://www.apachefriends.org/jp/xampp-windows.html)をインストールすることで、データベース、PHP、Apacheを簡単に導入することができます。
+
+また、以降はXAMPPをインストール済みの前提で説明していきます。
+
 
 Zend Framework のインストール
 ---------------
 
 インストールを実行する前に、最初に Jobeet に関連するファイルをすべて格納するディレクトリを作る必要があります。
 
-    $ mkdir -p /home/zfprojects/jobeet
+    c:\> cd c:\xampp\htdocs\jobeet
 
 
 ### Zend Framework のバージョンを選ぶ:
 それでは、Zend Framework をインストールします。Zend Framework はかなりの頻度でバージョンアップが行われるので、チュートリアルを開始する時期によってバージョンにかなりの差がありますが、基本的な構造体は変わらないはずです。
 
-このチュートリアルでは、Zend Framework バージョン 1.10.8をインストールすることを想定しています。
+このチュートリアルでは、Zend Framework バージョン 1.11.11をインストールすることを想定しています。
 
 
 ### Zend Framework のインストール位置を選ぶ:
@@ -60,49 +64,24 @@ Zend Framework をグローバルで利用できるようにインストール�
 
 ベストプラクティスとして、多くの人が Zend Framework フレームワークをプロジェクトの library/ ディレクトリにインストールします。ですので、最初にこのディレクトリを作ります:
 
-    $ pwd
-    /home/zfprojects/jobeet
-    $ mkdir library
+    c:\> cd c:\xampp\htdocs\jobeet
+    c:\xampp\htdocs\jobeet> mkdir library
 
 
 ### ダウンロードとインストール
 
-公式サイトからアーカイブをダウンロードして利用することもできますが、今回は Subversion で管理されているソースからインストールを行います。
+公式サイトから[フルバージョンアーカイブ](http://framework.zend.com/download/latest)をダウンロードして、解凍後に現れるlibraryディレクトリのZendフォルダを、先程作ったlibraryディレクトリに保存します。
 
-Zend Framework はフルパッケージと最小構成パッケージの２つが用意されています。
-
-    * フル構成パッケージ
-    * 最小構成パッケージ
-
-以下のコマンドを入力してください。
-
-    $ svn co http://framework.zend.com/svn/framework/standard/branches/release-1.10/bin
-    $ cd library
-    $ svn co http://framework.zend.com/svn/framework/standard/branches/release-1.10/library/Zend/
-
-アーカイブをダウンロードする方はこちらからダウンロードして、展開してください。
-
-   http://framework.zend.com/download/latest
-
-
-チェックアウト完了後、zf コマンドを有効化します。
-
-  $ pwd
-  /home/zfprojects/jobeet
-  $　ln -s /home/zfprojects/jobeet/bin/zf.sh /home/zfprojects/jobeet/zf
+ダウンロード完了後、zfコマンドを使えるようにするため、binディレクトリをプロジェクトディレクトリにコピーします。
 
 これで、 Zend Framework のインストールが完了しました。
 
-ここまで完了したら Zend Framework のコマンドラインスクリプトが動くか確認します。
+ここまで完了したら Zend Framework のコマンドラインスクリプトが動くか、インストール済みのZend Framework確認します。
 
-    $ zf show version
-      Zend Framework Version: 1.10.8
+    c:\xampp\htdocs\jobeet> bin\zf.bat show version
+    Zend Framework Version: 1.11.11
 
 このコマンドは、現在インストールされている Zend Framework のバージョン番号が表示されます。
-
-バージョン番号が正常に表示されれば、正常にインストールされています。
-
-バージョン番号が表示されない場合は、表示されたエラーメッセージを元に設定を行うかして、環境を整えます。（もっと良い言い回しが...＞＜）
 
 
 アプリケーションの作成
@@ -110,19 +89,18 @@ Zend Framework はフルパッケージと最小構成パッケージの２つ�
 
 それではアプリケーションを作成してみましょう。Zend Framework zf.sh（Widnwosユーザーの場合はzf.bat）というコマンドを利用して作成します。
 
-    $ zf create project Jobeet
+    c:\xampp\htdocs\jobeet> bin\zf.bat create project ./
 
 と実行すると
 
-    $ zf create project Jobeet
-    Creating project at /path/to/Jobeet
+    Creating project at c:\xampp\htdocs\jobeet
     Note: This command created a web project, for more information setting up your VHOST, please see docs/README
 
-のように `Jobeet` ディレクトリが作成され、その中にアプリケーションのスケルトンが作成されます。
+のように `c:\xampp\htdocs\jobeet` にアプリケーションのスケルトンが作成されます。
 
 次に、アプリケーションの名前空間を変更するため、以下のコマンドを実行します。
 
-    $ zf change application.class-name-prefix Jobeet
+    c:\xampp\htdocs\jobeet> zf change application.class-name-prefix Jobeet
 
 これでコマンドラインから作成されるアプリケーションは Jobeet という名前空間が付加された状態で作成されるようになりました。
 
@@ -133,8 +111,8 @@ Zend Framework はフルパッケージと最小構成パッケージの２つ�
 出来たスケルトンの各ディレクトリの役割は以下のようになります。
 
  * application - アプリケーションコードを格納するディレクトリ
- * public - ドキュメントルート
- * library - Zend Framework以外に利用するライブラリ格納場所
+ * public - ドキュメントルート 画像やCSSファイル等が追加されていきます
+ * library - プロジェクト内で利用するライブラリ格納場所
  * tests - アプリケーションのテストコードを置くディレクトリ
 
 ファイルの役割は
@@ -153,13 +131,13 @@ Zend Framework はフルパッケージと最小構成パッケージの２つ�
  tests/
    * application/bootstrap.php - テストコード起動ファイル
    * library/bootstrap.php - テストコード起動ファイル
-   * phpunit.xml - PHPUnitのテスト環境の設定ファイル（？）
+   * phpunit.xml - PHPUnitのテスト環境の設定ファイル
 
 
 Webサーバーのコンフィギュレーション
 ---------------------------
 
-Webサーバーのコンフィギュレーション：好ましくないやり方
+## Webサーバーのコンフィギュレーション：好ましくないやり方
 
 プロジェクトを Web サーバーの Web 公開ルートディレクトリのどこかで作成したのであれば。すでに Web ブラウザでプロジェクトにアクセスできます。
 
@@ -167,34 +145,34 @@ Webサーバーのコンフィギュレーション：好ましくないやり�
 
 **運用サーバーでこのセットアップ方法は絶対に実行してはなりません。 **次の節を読んで Web サーバーの適切な設定方法を学んでください。
 
-Web サーバーのセットアップ：セキュアな方法
+## Web サーバーのセットアップ：セキュアな方法
 
 Web 開発のよい習慣はスタイルシート、JavaScript、もしくは画像のような Web ブラウザがアクセスする必要のあるファイルだけを Web 公開ルートディレクトリの下に設置することです。デフォルトでは、Zend Framework プロジェクトの public サブディレクトリにこれらのファイルを保存することをおすすめします。
 
 フロントコントローラは Web 公開のルートディレクトリの下に必要な唯一の PHP ファイルです。ほかのすべての PHP ファイルはブラウザから隠すことが可能で、セキュリティに関してよいアイデアです。
 
-Web サーバーのコンフィギュレーション
+### Web サーバーのコンフィギュレーション
 
 世界中から新しいプロジェクトにアクセスできるように Apache のコンフィギュレーションを変更しましょう。
 
 httpd.conf 設定ファイルを見つけて開き次のコンフィギュレーションを最後の行を追加します:
 
 
-# Be sure to only have this line once in your configuration
-NameVirtualHost 127.0.0.1:8080
+    # Be sure to only have this line once in your configuration
+    NameVirtualHost 127.0.0.1:8080
 
-# This is the configuration for your project
-Listen 127.0.0.1:8080
+    # This is the configuration for your project
+    Listen 127.0.0.1:8080
 
-<VirtualHost 127.0.0.1:8080>
-  # Servername jobeet.localhost # ドメイン名で管理していく場合はコメントアウトを外します
-  DocumentRoot "/home/zfprojects/Jobeet/public"
-  DirectoryIndex index.php
-  <Directory "/home/zfprojects/Jobeet/public">
-    AllowOverride All
-    Allow from All
-  </Directory>
-</VirtualHost>
+    <VirtualHost 127.0.0.1:8080>
+      # Servername jobeet.localhost # ドメイン名で管理していく場合はコメントアウトを外します
+      DocumentRoot "/home/zfprojects/Jobeet/public"
+      DirectoryIndex index.php
+      <Directory "/home/zfprojects/Jobeet/public">
+        AllowOverride All
+        Allow from All
+      </Directory>
+    </VirtualHost>
 
 
 アプリケーションの実行環境を変更する
@@ -222,8 +200,9 @@ Zend Framework はプロジェクトを作成した時点では、実行環境�
 新しい設定をテストする
 ------------------
 
-Apache を再起動し、ブラウザを開き http://localhost:8080/ もしくは http://jobeet.localhost/を入力することで新しいアプリケーションにアクセスできるか確認します。どちらの URL になるのかは以前の節で選んだ設定によります。
+XAMPPコントローラーからApache を再起動し、ブラウザを開き http://localhost:8080/ もしくは http://jobeet.localhost/を入力することで新しいアプリケーションにアクセスできるか確認します。どちらの URL になるのかは以前の節で選んだ設定によります。
 
+画面に「Welcome to the Zend Framework!」と表示されれば成功です！
 
 
 それではまた明日！
