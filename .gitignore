@@ -2,4 +2,6 @@ nbproject
 zf
 library/Zend/
 bin
-.zfproject
+.zfproject.xml
+/tests/
+/docs/README.txt
