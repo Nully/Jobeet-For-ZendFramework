@@ -1,2 +1,5 @@
 nbproject
 zf
+library/Zend/
+bin
+.zfproject
